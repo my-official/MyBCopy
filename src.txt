@@ -1,0 +1,18 @@
+	;Комментарий. Подключаем файлы так:
+;#include another_src.txt
+
+<Backup 1 Name>
+D:\MyDir1
+-D:\MyDir1\MyExcludedDir
+D:\MyDir2
+-D:\MyDir2\SubDir\MyExcludedDir
+C:\MyDir3\*.cpp;*.cxx;*.c;*.asm;*.hpp;*.h;*.inl;*.vcxproj*;*.sln;*.txt;*.ini;*.inf
+-C:\MyDir3\*.obj;*.dmp;*.tmp
+
+<Backup 2 Name>
+C:\MyDir4
+-D:\MyDir4\MyExcludedDir
+D:\MyDir5
+-D:\MyDir5\SubDir\MyExcludedDir
+C:\MyDir6\*.cpp;*.cxx;*.c;*.asm;*.hpp;*.h;*.inl;*.vcxproj*;*.sln;*.txt;*.ini;*.inf
+-C:\MyDir6\*.obj;*.dmp;*.tmp
