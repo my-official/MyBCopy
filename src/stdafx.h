@@ -17,33 +17,56 @@
 
 
 
+#include <map>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
 
-#include <iostream>
+
+
 #include <fstream>
+#include <iostream>
 #include <sstream>
 
 
-#include <string>
-#include <vector>
-#include <queue>
-#include <map>
-#include <unordered_map>
-#include <set>
-#include <unordered_set>
-#include <deque>
 #include <algorithm>
-#include <iterator>
-#include <exception>
-#include <stdexcept>
-#include <locale>
-#include <initializer_list>
-#include <utility>      // std::rel_ops
 #include <complex>
-#include <ratio>
-#include <limits>
-#include <memory>
-#include <regex>
+#include <deque>
+#include <exception>
+#include <functional>
+#include <initializer_list>
 
+#include <iterator>
+#include <limits>
+#include <locale>
+#include <memory>
+#include <numeric>
+#include <queue>
+#include <random>
+#include <ratio>
+#include <regex>
+#include <set>
+#include <stdexcept>
+#include <string>
+#include <utility>      // std::rel_ops
+
+
+
+////RTTI
+#include <typeindex>
+#include <typeinfo>
+#include <type_traits>
+
+
+////Multi-threading
+#include <atomic>
+#include <future>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+
+
+///C++ 14/17
 #include <experimental/filesystem>
 
 
@@ -54,15 +77,21 @@
 
 #include <process.h>
 
-
+///Windows
 
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
+
+//Third party
+
 #include "ini.h"
+
 
 ///My
 
 using namespace std;
+namespace fs = std::experimental::filesystem;
+
 #include "Exceptions.h"

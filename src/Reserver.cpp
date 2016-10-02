@@ -1,12 +1,17 @@
 #include "stdafx.h"
 #include "Reserver.h"
+#include "Utils.h"
+#include "InternetIOManager.h"
+#include "BackupJobExecuter.h"
+#include "UtilsMyRCopy.h"
 
 
-//const string DestListFile = "DestList.txt";
+//const wstring DestListFile = "DestList.txt";
 
-//const string VeraCryptContainerFilePath = "J:\\";
+//const wstring VeraCryptContainerFilePath = "J:\\";
 
-static TCHAR buffer[255*255 * 255];
+
+
 
 
 void Reserver::Schtask()
@@ -14,513 +19,224 @@ void Reserver::Schtask()
 	//if (system(nullptr) == 0)
 	//	throw EXCEPTION(ErrnoException());
 
-	//string rarCmd = "schtasks /Create /SC DAILY /TN myBackup /TR /F  ";
+	//wstring rarCmd = "schtasks /Create /SC DAILY /TN myBackup /TR /F  ";
 
-	//cout << rarCmd << endl;
+	//wcout << rarCmd << endl;
 	
 	//if (system(rarCmd.c_str()) != 0)
 	//	throw EXCEPTION(ErrnoException());
 }
 
-void Reserver::RunCMD(const string& cmd)
-{
-	cout << cmd << endl << endl;
 
-	auto returnCode = system(cmd.c_str());
-	
-	if (returnCode != 0)
+
+
+
+
+void Reserver::RegularBackups()
+{
+	for (auto& backup : m_Backups)
 	{
-		cout << "Return Code is " << returnCode << endl;
-		throw EXCEPTION(ErrnoException());
-	}
+		BackupJob backupJob(&m_BackupJobExecuter, GeneralSettings::Instance().m_TemporaryDir + L"\\" + backup.m_ArchiveName);
+		backupJob.Backup = backup;		
+		backupJob.UploadToStorages = m_Storages;
 		
-}
-
-template <typename Func>
-void ForEachNonEmptySubword(const string& filetypes, char delimiter, Func func)
-{
-	auto length = filetypes.length();
-	if (length == 0)
-		return;
-
-	auto pos = filetypes.find(delimiter);
-	
-	if (pos != string::npos)
-	{
-		decltype(pos) start = 0;
-		do
-		{
-			if (start == pos)
-			{
-				start += 1;				
-			}
-			else
-			{
-				func(&filetypes[start], pos - start);
-				start = pos + 1;
-			}
-
-			if (start >= length)
-				return;
-
-			pos = filetypes.find(delimiter, start);
-			
-		} while (pos != string::npos);
-
-		func(&filetypes[start], length - start);
-	}
-	else
-	{
-		func(&filetypes[0], length);
-	}
-}
-
-void Reserver::ParsePath(const string& line, const string& srcFile, size_t currLine)
-{
-	auto pos = line.rfind('\\');
-	
-	if (pos == string::npos)
-		throw EXCEPTION(ParseException(srcFile,currLine));
-
-	if (pos == 0)
-		throw EXCEPTION(ParseException(srcFile, currLine));
-
-	string path = line.substr(0, pos);
-	if (path.empty())
-		throw EXCEPTION(ParseException(srcFile, currLine));
-
-	bool exclusion = path[0] == '-';
-
-	if (exclusion)
-	{
-		if (path.size() == 1)
-			throw EXCEPTION(ParseException(srcFile, currLine));
-
-		path = path.substr(1);
+		m_BackupJobs.emplace_back(move(backupJob));
 	}	
+}
 
-	if (pos + 1 < line.size())
+void Reserver::DeltaBackup_SpecificPerStorage()
+{
+	for (auto& storage : m_Storages)
 	{
-		string filetypes = line.substr(pos + 1);
-
-		ForEachNonEmptySubword(filetypes, ';', [&](const char* filetype, string::size_type filetypeSize)
+		for (auto& backup : m_Backups)
 		{
-			if (filetype[0] == '-')
-			{
-				if (filetypeSize == 1)
-					throw EXCEPTION(ParseException(srcFile, currLine));
-
-				if (exclusion)
-					throw EXCEPTION(ParseException(srcFile, currLine));
-
-				filetype = filetype + 1;
-				m_Backups.back().ExclFiles.push_back(path + string("\\") + string(filetype, filetypeSize - 1));
-			}
-			else
-			{
-				if (exclusion)
-					m_Backups.back().ExclFiles.push_back(path + string("\\") + string(filetype, filetypeSize));
-				else
-					m_Backups.back().SrcFiles.push_back(path + string("\\") + string(filetype, filetypeSize));
-			}
-		});	
+			DeltaBackup_Internal(storage, backup);			
+		}
 	}
-	else
+}
+
+void Reserver::DeltaBackup_UseReferenceStorage()
+{
+	auto referenceStorage_it = GetReferenceStorageIterator();
+
+	shared_ptr<Storage>& referenceStorage = *referenceStorage_it;
+
+	for (auto& backup : m_Backups)
 	{
-		if (exclusion)
-			m_Backups.back().ExclFiles.push_back(path);
-		else
-			m_Backups.back().SrcFiles.push_back(path);		
+		DeltaBackup_Internal(referenceStorage, backup);			
 	}
 }
 
 
-void Reserver::LoadSourcesFromFile(const string& srcFile)
+void Reserver::DeltaBackup_Internal(shared_ptr<Storage>& storage, ParsedBackup& backup)
 {
-	ifstream srcFileStream;
-	
+	BackupJob backupJob(&m_BackupJobExecuter, GeneralSettings::Instance().m_TemporaryDir + L"\\" + backup.m_ArchiveName);
+	backupJob.Backup = backup;
 
-	std::experimental::filesystem::path srcFileFullPath(srcFile);
+	auto enumeratedList = storage->GetEnumeratedBackupFiles(backup);
 
-	if (srcFileFullPath.is_absolute())
-		srcFileStream.open(srcFile);
-	else
-		srcFileStream.open(m_ExePath + "\\" + srcFile);	
+	if (!enumeratedList.Empty())
+	{
+		auto numOfDeltas = storage->GetNumOfDeltaFromLastRegular(backup);
 
-	if (!srcFileStream)
-		return;
 
-	size_t currLine = 0;	
-	string line;
 
-	while (!srcFileStream.eof())
+		if (GeneralSettings::Instance().m_MaxDeltaBackups >= numOfDeltas)
+		{
+			auto numOfDeltaIncrements = storage->GetNumOfDeltaIncrementsOfLastDeltaFromLastRegular(backup);
+
+			if (GeneralSettings::Instance().m_MaxDeltaIncrements > numOfDeltaIncrements)
+			{
+				AddForCreation_IncrementalBackup(storage, backup, backupJob);
+			}
+			else
+			{
+				if (GeneralSettings::Instance().m_MaxDeltaBackups > numOfDeltas)
+				{
+					AddForCreation_DeltaBackup(storage, backup, backupJob);
+				}
+				else
+				{
+					//AddForCreation_RegularBackup(backup);
+				}				
+			}			
+		}
+		else
+		{
+			//AddForCreation_RegularBackup();				
+		}
+	}
+
+	backupJob.UploadToStorages = m_Storages;
+	m_BackupJobs.emplace_back(move(backupJob));
+}
+
+std::list< std::shared_ptr<Storage> >::iterator Reserver::GetReferenceStorageIterator()
+{
+	auto referenceStorage_it = find_if(m_Storages.begin(), m_Storages.end(), [&](const shared_ptr<Storage>& a)->bool
+	{
+		return a->m_Name == GeneralSettings::Instance().m_ReferenceStorage;
+	});
+
+	if (referenceStorage_it == m_Storages.end())
+		throw EXCEPTION( SettingsError(L"No reference storage") );
+	return referenceStorage_it;
+}
+
+
+void Reserver::LoadStorage(const wstring& storageName, const INI::WLevel& section)
+{
+	const wstring& storageType = section.values.at(L"StorageType");
+
+	if (storageType == L"WebDav")
 	{		
-		getline(srcFileStream, line);
-		++currLine;
+		auto hlResult = make_shared<WebDavStorage>(this);
+		hlResult->m_Name = storageName;
+		hlResult->m_UserName = section.values.at(L"UserName");
+		hlResult->m_Password = section.values.at(L"Password");
+		hlResult->m_Url = section.values.at(L"Url");
 
-		smatch matches;
-				
-		if ( !regex_search(line, matches, regex( "\\S" ))  )
+		m_Storages.emplace_back(move(hlResult));
+		return;
+	}
+
+	if (storageType == L"LocalDisk")
+	{
+		auto hlResult = make_shared<LocalDiskStorage>(this);
+		hlResult->m_Name = storageName;
+		hlResult->m_Path = section.values.at(L"Path");
+
+		m_Storages.emplace_back(move(hlResult));
+		return;
+	}	
+}
+
+
+
+
+void Reserver::LoadStorages()
+{
+	auto& iniSections = m_SettingsIni.top().sections;
+
+	for (auto& section : iniSections)
+	{
+		const wstring& sectionName = section.first;
+		if (sectionName == L"General")
 			continue;
 
-		if (matches.size() != 1)
-			throw EXCEPTION( ParseException(srcFile, currLine) );
+		if (!section.second.values.count(L"StorageType"))
+			continue;
 
-		auto& match = matches[0];
-
-		switch (match.str()[0])
-		{
-			case ';': break;
-			case '#':
-			{
-				cmatch includedFileMatches;
-				if (!regex_match(line.c_str() + matches.position() + match.length(), includedFileMatches, regex(R"regex(include\s(\w.*)(?=\r?$))regex" )))
-					throw EXCEPTION(ParseException(srcFile,currLine));
-				
-				if (includedFileMatches.size() != 2)
-					throw EXCEPTION(ParseException(srcFile,currLine));
-
-				LoadSourcesFromFile(includedFileMatches[1].str());
-			
-			}
-			break;
-			case '<':
-			{
-				cmatch sectionNameMatches;
-				if (!regex_match(line.c_str() + matches.position() + match.length(), sectionNameMatches, regex(R"((.+)>)")))
-					throw EXCEPTION(ParseException(srcFile,currLine));
-
-				if (sectionNameMatches.size() != 2)
-					throw EXCEPTION(ParseException(srcFile,currLine));
-				
-				m_Backups.emplace_back();
-				Backup& backup = m_Backups.back();
-				backup.ArchiveName = sectionNameMatches[1];
-			}
-			break;
-
-			default:
-			{
-				if (m_Backups.empty())
-					throw EXCEPTION(ParseException(srcFile,currLine));
-
-				ParsePath(line.c_str() + matches.position(), srcFile, currLine);
-			}
-			break;
-		}		
-	}
+		LoadStorage(sectionName,section.second);	
+	}	
 }
 
-void Reserver::PrepareSourceFileListForRar(Backup& backup)
+
+
+bool Reserver::Process()
 {
-	namespace fs = std::experimental::filesystem;		
-
-	fs::create_directories(GetTemporaryDirPath(backup));
-
-	ofstream outfile( GetTemporaryRarSourceListFile(backup));
-
-	if (!outfile)
-		throw EXCEPTION( ErrnoException() );
-
-	for (auto& srcfile : backup.SrcFiles)
-	{
-		outfile << "\"" << srcfile << "\"" << endl;
-	}
-
-	if (!backup.ExclFiles.empty())
-	{
-		outfile.close();
-
-		outfile.open( GetTemporaryRarExclusionListFile(backup));
-
-		if (!outfile)
-			throw EXCEPTION(ErrnoException());
-
-		for (auto& srcfile : backup.ExclFiles)
-		{
-			outfile << "\"" << srcfile << "\"" << endl;
-		}
-	}
-}
-
-void Reserver::CleanupRar(Backup& backup)
-{
-	namespace fs = std::experimental::filesystem;
-
-	fs::remove(GetTemporaryRarSourceListFile(backup));
-	fs::remove(GetTemporaryRarExclusionListFile(backup));
-	fs::remove(GetTemporaryRarFile(backup));
-}
-
-void Reserver::AddPath(const string& newpath)
-{
-	char* path = nullptr;
-
-	if (_dupenv_s(&path, nullptr, "PATH") != 0)
-		throw EXCEPTION( ErrnoException());
-	
-	if (!path)
-		throw EXCEPTION(ErrnoException());
-	
-				
-	
-	if (_putenv_s("PATH", (string(path) + ";" + newpath).c_str()) != 0)
+	if (_wsystem(nullptr) == 0)
 		throw EXCEPTION(ErrnoException());
 
-	free(path);
-}
+	GeneralSettings::Instance().Load(m_SettingsIni);
+	LoadStorages();
 
-std::string Reserver::GetTemporaryDirPath(const Backup& backup) const
-{
-	return m_TemporaryDir + "\\" + backup.ArchiveName;
-}
-
-std::string Reserver::GetTemporaryRarFile(const Backup& backup) const
-{	
-	return GetTemporaryDirPath(backup) + "\\" + m_Now + ".rar";
-}
-
-std::string Reserver::GetTemporaryRarSourceListFile(const Backup& backup) const
-{
-	return GetTemporaryDirPath(backup) + "\\sources.txt";
-}
-
-std::string Reserver::GetTemporaryRarExclusionListFile(const Backup& backup) const
-{
-	return GetTemporaryDirPath(backup) + "\\exclusion.txt";
-}
-
-std::string Reserver::GetTemporary7zEncryptedFile(const Backup& backup) const
-{
-	return GetTemporaryDirPath(backup) + "\\" + m_Now + ".7z";
-}
-
-std::string Reserver::GetCloudDestPath(const Backup& backup) const
-{
-	return m_RCopyDirPath + "\\" + backup.ArchiveName;	
-}
-
-std::string Reserver::GetCloudDestFile(const Backup& backup) const
-{
-	return GetCloudDestPath(backup) + "\\" + m_Now + ".7z";
-}
-
-void Reserver::MakeRarArchive(const Backup& backup)
-{
-	string passwd = m_SettingsIni.top()("Rar")["Password"];
-	string SourcesListFile = m_SettingsIni.top()("General")["SourcesListFile"];
-	
-	string cmd = "rar a -hp\"" + passwd + "\" -idq -m5 -r -s -t -y ";
-		
-	if (!backup.ExclFiles.empty())
+	if (m_Storages.empty())
 	{
-		cmd += "-x@\"" + GetTemporaryRarExclusionListFile(backup) + "\"";
+		WriteToConsole(L"No files for backup");
+		return true;
 	}
 
-	cmd += " -- \"" + GetTemporaryRarFile(backup) + "\" @\"" + GetTemporaryRarSourceListFile(backup) + "\"";
-
-	RunCMD(cmd);	
-}
-
-void Reserver::Make7zArchive(const Backup& backup)
-{
-	string passwd = m_SettingsIni.top()("7z")["Password"];
+	ParsedBackup::LoadBackupSourcesFromFile(m_SettingsIni.top()(L"General")[L"SourcesListFile"], m_Backups);
 	
-	RunCMD("7z a -p\"" + passwd + "\" -mhe=on -mx=0 -bso0 -bsp0 -y \"" + GetTemporary7zEncryptedFile(backup) + "\" \"" + GetTemporaryRarFile(backup) + "\"");
-	RunCMD("7z t -p\"" + passwd + "\" -bso0 -bsp0 -y \"" + GetTemporary7zEncryptedFile(backup) + "\" *");			
-}
-
-
-
-std::string Reserver::Now()
-{
-	time_t rawtime;
-	struct tm  timeinfo;
-	char buffer[80];
-
-	time(&rawtime);
-
-	if (localtime_s(&timeinfo, &rawtime) != 0)
-		throw EXCEPTION(ErrnoException());
-
-	strftime(buffer, 80, "%F_%H-%M", &timeinfo);
-	//puts(buffer);
-
-	return buffer;
-}
-
-
-
-
-void Reserver::UploadToCloud(const string& IniFileSectionName)
-{
-	if (m_SettingsIni.top().sections.count(IniFileSectionName) == 0)
-	{
-		cout << "No section " << IniFileSectionName << endl;
-		return;
-	}
-
-
-	cout << endl << "Uploading To " << IniFileSectionName << endl;
-	
-
-	MountWebDavShare(IniFileSectionName);
-		
-	
-	for (auto& backup : m_Backups)
-	{
-		string destDir = GetCloudDestPath(backup);
-
-		if (!std::experimental::filesystem::exists(destDir))
-		{
-			if (!std::experimental::filesystem::create_directories(destDir))
-				throw EXCEPTION(SystemException());
-			
-		}
-
-		string cmd = "copy "; // /V - верифицировать
-
-		if (m_SettingsIni.top()("General").values.count("Verification"))
-		{
-			string v = m_SettingsIni.top()("General")["Verification"];
-			if ( v == "on" || v == "1" || v == "yes" || v == "true")
-				cmd += "/V ";
-		}
-		cmd += "/Y \"" + GetTemporary7zEncryptedFile(backup) + "\" \"" + destDir + "\" ";			 
-
-
-		RunCMD(cmd);
-
-		RemoveOldArchives(backup);
-	}		
-
-	UnmountWebDavShare();
-
-	cout << "Uploaded to " << IniFileSectionName << endl << endl;
-}
-
-
-
-void Reserver::MountWebDavShare(const string& IniFileSectionName)
-{
-	string Url = m_SettingsIni.top()(IniFileSectionName)["Url"];
-	string UserName = m_SettingsIni.top()(IniFileSectionName)["UserName"];
-	string Password = m_SettingsIni.top()(IniFileSectionName)["Password"];
-
-	string Disk = m_SettingsIni.top()("General")["CloudShareDisk"];		
-
-	RunCMD("net use " + Disk + " \"" + Url + "\" /USER:\"" + UserName + "\" \"" + Password + "\" /PERSISTENT:NO");	
-}
-
-void Reserver::RemoveOldArchives(const Backup& backup)
-{
-	namespace fs = std::experimental::filesystem;
-
-	set<wstring> files;
-
-	for (auto& p : fs::directory_iterator(GetCloudDestPath(backup) ) )
-	{
-		if (p.path().extension() == L".7z" && fs::is_regular_file(p))
-		{
-			files.insert(p.path().c_str());
-		}
-	}
-
-	if (files.size() > m_MaxNumOfOldArchives)
-	{
-		cout << "Removing old files" << endl;
-		for (unsigned int c = 0, size = files.size() - m_MaxNumOfOldArchives; c < size; c++)
-		{
-			auto it = files.begin();
-			advance(it, c);
-			string ansiFileName = wstring_convert< codecvt<wchar_t, char, mbstate_t> >().to_bytes(it->c_str());
-			cout << "Removing " << ansiFileName << endl;			
-			fs::remove(*it);
-		}
-	}
-}
-
-void Reserver::UnmountWebDavShare()
-{
-	string Disk = m_SettingsIni.top()("General")["CloudShareDisk"];		
-	RunCMD("net use " + Disk + " /DELETE");	
-}
-
-
-void Reserver::Process()
-{
-	if (system(nullptr) == 0)
-		throw EXCEPTION(ErrnoException());
-	
-	AddPath(m_SettingsIni.top()("Rar")["DirPath"]);
-	AddPath(m_SettingsIni.top()("7z")["DirPath"]);
-
-
-	m_TemporaryDir = m_SettingsIni.top()("General")["TemporaryDir"];
-	
-	cout << "TemporaryDir is " << m_TemporaryDir << endl;
-
-	if (!std::experimental::filesystem::exists(m_TemporaryDir))
-	{
-		cout << "TemporaryDir not found" << endl;
-		throw SystemException();
-	}
-	
-
-	m_MaxNumOfOldArchives =  stoi( m_SettingsIni.top()("General")["MaxNumOfOldArchives"] );
-
-	if (m_MaxNumOfOldArchives < 5 )
-		m_MaxNumOfOldArchives = 5;
-
-	cout << "MaxNumOfOldArchives " << m_MaxNumOfOldArchives << endl;
-	//Schtask();
-
-	m_Now = Now();
-	
-	LoadSourcesFromFile(m_SettingsIni.top()("General")["SourcesListFile"] );
-
 	if (m_Backups.empty())
 	{
-		cout << "No files for backup" << endl;
-		return;
-	}		
-
-	for (auto& backup : m_Backups)
-	{	
-		PrepareSourceFileListForRar(backup);				
-		MakeRarArchive(backup);						
-		Make7zArchive(backup);
-		CleanupRar(backup);	
+		WriteToConsole(L"No files for backup");		
+		return true;
 	}
 
-	string Disk = m_SettingsIni.top()("General")["CloudShareDisk"];
-
-	if (std::experimental::filesystem::exists(Disk))
+	AddPath(m_SettingsIni.top()(L"Rar")[L"DirPath"]);
+	AddPath(m_SettingsIni.top()(L"7z")[L"DirPath"]);
+		
+	WriteToConsole(wstring(L"TemporaryDir is ") + GeneralSettings::Instance().m_TemporaryDir);
+	WriteToConsole(wstring(L"MaxNumOfOldArchives ") + to_wstring(GeneralSettings::Instance().m_MaxNumOfOldArchives) );
+	
+	if (!fs::exists(GeneralSettings::Instance().m_TemporaryDir))
 	{
-		UnmountWebDavShare();
+		WriteToConsole(L"TemporaryDir not found");		
+		throw EXCEPTION(WinException());
 	}
 
-	m_RCopyDirPath = Disk + "\\" + m_SettingsIni.top()("General")["CloudRCopyDirName"];
+	
 
-	UploadToCloud("YandexDisk");
-	UploadToCloud("OneDrive");
-	UploadToCloud("DropBox");		
+	if (GeneralSettings::Instance().m_MaxDeltaBackups > 0)
+	{
+		if (!GeneralSettings::Instance().m_ReferenceStorage.empty())
+		{
+			//вариант 1
+			//Эталонное хранилище
+			DeltaBackup_UseReferenceStorage();
+		}
+		else
+		{	//вариант 2
+			//Создание разностного бекапа для каждого хранилища
+			DeltaBackup_SpecificPerStorage();
+		}
+	}
+	else
+	{
+		RegularBackups();
+	}
+
+	
+	return m_BackupJobExecuter();
 }
 
 
-string Reserver::GetThisProgramExeDirPath()
-{
-	ZeroMemory(buffer, sizeof(buffer));
 
-	if (GetModuleFileName(nullptr, buffer, sizeof(buffer)) == 0)
-		throw EXCEPTION( SystemException() );
-
-	namespace fs = std::experimental::filesystem;
-	wstring exeFilePathW = fs::path(buffer).parent_path();
-	return wstring_convert< codecvt<wchar_t, char, mbstate_t> >().to_bytes(exeFilePathW.c_str());
-}
-
-Reserver::Reserver() : m_ExePath(GetThisProgramExeDirPath()), m_SettingsIni( (m_ExePath + "\\Settings.ini").c_str() )
+Reserver::Reserver()
+	: m_SettingsIni( (GeneralSettings::Instance().m_ExePath + L"\\Settings.ini").c_str() ),
+	m_BackupJobExecuter(this)
 {
 }
 
@@ -529,23 +245,74 @@ Reserver::~Reserver()
 {
 }
 
-ParseException::ParseException(const string& file, size_t line) : m_File(file) , m_Line(line)
+
+
+void Reserver::AddForCreation_IncrementalBackup(shared_ptr<Storage>& storage, ParsedBackup& backup, BackupJob& backupJob)
+{	
+	backupJob.DownloadFromStorage = storage;
+
+	auto lastBackupInfo = storage->GetLastBackupsInfo(backup);
+
+	backupJob.RegularFileName = lastBackupInfo.LastRegularFilename;
+	backupJob.DeltaFileName = lastBackupInfo.LastDeltaFilename;
+	backupJob.IncrementFileNames = lastBackupInfo.IncrementFilenames;
+}
+
+void Reserver::AddForCreation_DeltaBackup(shared_ptr<Storage>& storage, ParsedBackup& backup, BackupJob& backupJob)
+{
+	backupJob.DownloadFromStorage = storage;
+
+	auto lastBackupInfo = storage->GetLastBackupsInfo(backup);
+
+	backupJob.RegularFileName = lastBackupInfo.LastRegularFilename;	
+}
+
+ParseException::ParseException(const wstring& file, size_t line) : m_File(file) , m_Line(line)
 {
 
 }
 
 void ParseException::FormattedMessageLine()
 {
-	TextLine("Parse error at " + m_File + ":" + to_string(m_Line));
+	TextLine(L"Parse error at " + m_File + L":" + to_wstring(m_Line));
 }
 
 
 
-//void Reserver::CreateVeraCryptContainer(string veraCryptContainerFile)
+//void Reserver::CreateVeraCryptContainer(wstring veraCryptContainerFile)
 //{
-//	//const string newPath = R"(C:\Program Files\VeraCrypt)";
+//	//const wstring newPath = R"(C:\Program Files\VeraCrypt)";
 //
-//	//string cmd = "cd //D " + VeraCryptContainerFilePath + R"(" && "VeraCrypt Format.exe" /create ")" + veraCryptContainerFileName + R"(" /size 25M /password "a b ы ) " /encryption Twofish /filesystem FAT /force /silent)";
+//	//wstring cmd = "cd //D " + VeraCryptContainerFilePath + R"(" && "VeraCrypt Format.exe" /create ")" + veraCryptContainerFileName + R"(" /size 25M /password "a b ы ) " /encryption Twofish /filesystem FAT /force /silent)";
 //
 
 //}
+
+SettingsError::SettingsError(const wstring& msg)
+{
+	TextLine(msg);
+}
+
+
+
+
+void GeneralSettings::Load(INI::WParser& settingsIni)
+{
+	m_MaxNumOfOldArchives = stoul( settingsIni.top()(L"General")[L"MaxNumOfOldArchives"] );
+	m_MinNumOfOldRegularArchives = stoul(settingsIni.top()(L"General")[L"MinNumOfOldRegularArchives"]);
+	m_CloudRCopyDirName = settingsIni.top()(L"General")[L"CloudRCopyDirName"];
+	m_CloudShareDisk = settingsIni.top()(L"General")[L"CloudShareDisk"];
+	m_TemporaryDir = settingsIni.top()(L"General")[L"TemporaryDir"];
+	m_NowTimestamp = NowTimestampAsString();
+	m_ReferenceStorage = settingsIni.top()(L"General")[L"ReferenceStorage"];
+	m_MaxDeltaBackups = stoul(settingsIni.top()(L"General")[L"MaxDeltaBackups"]);
+
+	m_MaxDeltaIncrements = stoul(settingsIni.top()(L"General")[L"MaxDeltaIncrements"]);
+}
+
+GeneralSettings::GeneralSettings() : m_ExePath(GetThisProgramExeDirPath())
+{
+	INI::WParser settingsIni((m_ExePath + L"\\Settings.ini").c_str());	
+	Load(settingsIni);
+}
+
