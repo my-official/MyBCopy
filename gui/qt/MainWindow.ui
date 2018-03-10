@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>510</width>
+    <height>360</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MyBCopy</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="main.qrc">
+    <normaloff>:/Ariil-Alphabet-Letter-M.ico</normaloff>:/Ariil-Alphabet-Letter-M.ico</iconset>
+  </property>
+  <widget class="QStackedWidget" name="MainStack">
+   <property name="currentIndex">
+    <number>0</number>
+   </property>
+   <widget class="QWidget" name="StartPage">
+    <layout class="QHBoxLayout" name="horizontalLayout_6">
+     <item>
+      <widget class="QTableView" name="BackupTable">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>400</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="contextMenuPolicy">
+        <enum>Qt::CustomContextMenu</enum>
+       </property>
+       <property name="selectionMode">
+        <enum>QAbstractItemView::SingleSelection</enum>
+       </property>
+       <property name="selectionBehavior">
+        <enum>QAbstractItemView::SelectRows</enum>
+       </property>
+       <attribute name="horizontalHeaderHighlightSections">
+        <bool>false</bool>
+       </attribute>
+       <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
+        <bool>false</bool>
+       </attribute>
+       <attribute name="horizontalHeaderStretchLastSection">
+        <bool>true</bool>
+       </attribute>
+       <attribute name="verticalHeaderVisible">
+        <bool>false</bool>
+       </attribute>
+      </widget>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout_7" stretch="0,0,0,0,0,0,0">
+       <item>
+        <widget class="QPushButton" name="SettingsButton">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>Settings</string>
+         </property>
+         <property name="icon">
+          <iconset resource="main.qrc">
+           <normaloff>:/Iconmoon-Viva-Control-Panel.ico</normaloff>:/Iconmoon-Viva-Control-Panel.ico</iconset>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="NewBackupButton">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>New</string>
+         </property>
+         <property name="icon">
+          <iconset resource="backupmodel.qrc">
+           <normaloff>:/Button-Add-icon.png</normaloff>:/Button-Add-icon.png</iconset>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="LoadButton">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>Other list...</string>
+         </property>
+         <property name="icon">
+          <iconset resource="main.qrc">
+           <normaloff>:/Rokey-Seed-Open-folder.ico</normaloff>:/Rokey-Seed-Open-folder.ico</iconset>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="LanguageButton">
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="main.qrc">
+           <normaloff>:/Custom-Icon-Design-All-Country-Flag-Russia-Flag.ico</normaloff>:/Custom-Icon-Design-All-Country-Flag-Russia-Flag.ico</iconset>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="AboutButton">
+         <property name="text">
+          <string>About</string>
+         </property>
+         <property name="icon">
+          <iconset resource="main.qrc">
+           <normaloff>:/Ampeross-Lamond-Help.ico</normaloff>:/Ampeross-Lamond-Help.ico</iconset>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QPushButton" name="BackupButton">
+         <property name="text">
+          <string>Backup!</string>
+         </property>
+         <property name="icon">
+          <iconset resource="main.qrc">
+           <normaloff>:/Ariil-Alphabet-Letter-B.ico</normaloff>:/Ariil-Alphabet-Letter-B.ico</iconset>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </widget>
+   <widget class="BackupEditor" name="EditBackupPage"/>
+   <widget class="SettingsEditor" name="SettingsPage"/>
+   <widget class="ProgressViewer" name="ProgressPage"/>
+  </widget>
+  <action name="RemoveAction">
+   <property name="text">
+    <string>Remove</string>
+   </property>
+   <property name="toolTip">
+    <string>Remove selected</string>
+   </property>
+  </action>
+  <action name="SetAction">
+   <property name="text">
+    <string>Edit...</string>
+   </property>
+   <property name="toolTip">
+    <string>Edit parameters</string>
+   </property>
+  </action>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>BackupEditor</class>
+   <extends>QWizard</extends>
+   <header>BackupEditor.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>SettingsEditor</class>
+   <extends>QWidget</extends>
+   <header>SettingsEditor.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ProgressViewer</class>
+   <extends>QWidget</extends>
+   <header>ProgressViewer.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources>
+  <include location="backupmodel.qrc"/>
+  <include location="main.qrc"/>
+ </resources>
+ <connections/>
+</ui>

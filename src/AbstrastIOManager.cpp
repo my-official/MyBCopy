@@ -1,7 +1,7 @@
-#include "stdafx.h"
+#include "MyBCopy_pch.h"
 #include "AbstrastIOManager.h"
 
-IOManagerEvent::IOManagerEvent(nullptr_t) : m_Type(EventType::Quit)
+IOManagerEvent::IOManagerEvent(nullptr_t) : m_Type(EventType::Quit), m_Completion(Completion::CreateEmpty())
 {
 
 }
@@ -32,7 +32,7 @@ void ThreadedEventLoop<IOManagerEvent>::ThreadMain()
 
 			do
 			{
-				IOManagerEvent& event = events.back();
+				IOManagerEvent& event = events.front();
 
 				if (event.m_Type != EventType::Quit)
 				{

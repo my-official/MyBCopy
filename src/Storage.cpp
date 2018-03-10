@@ -1,36 +1,36 @@
-#include "stdafx.h"
+#include "MyBCopy_pch.h"
 #include "Storage.h"
 #include "LocalDiskIOManager.h"
 #include "InternetIOManager.h"
 #include "Utils.h"
-#include "UtilsMyRCopy.h"
+#include "UtilsMyBCopy.h"
 
 
-unsigned int Storage::GetNumOfDeltaFromLastRegular(const BackupBase& backup) const
+unsigned int Storage::GetNumBranchesFromLastRegular(const BackupBase& backup) const
 {
 	auto enumeratedRegulars = GetEnumeratedBackupFiles(backup);
 
-	if (enumeratedRegulars.Regular2Deltas.empty())
+	if (enumeratedRegulars.Regular2Branches.empty())
 		return 0;
 
-	auto& enumeratedDeltas = enumeratedRegulars.Regular2Deltas.rbegin()->second;
+	auto& enumeratedBranches = enumeratedRegulars.Regular2Branches.rbegin()->second;
 	
-	return enumeratedDeltas.Delta2Increments.size();
+	return enumeratedBranches.Branch2Increments.size();
 }
 
-unsigned int Storage::GetNumOfDeltaIncrementsOfLastDeltaFromLastRegular(const BackupBase& backup) const
+unsigned int Storage::GetLastChainLengthFromLastRegular(const BackupBase& backup) const
 {
 	auto enumeratedRegulars = GetEnumeratedBackupFiles(backup);
 
-	if (enumeratedRegulars.Regular2Deltas.empty())
+	if (enumeratedRegulars.Regular2Branches.empty())
 		return 0;
 
-	auto& enumeratedDeltas = enumeratedRegulars.Regular2Deltas.rbegin()->second;
+	auto& enumeratedBranches = enumeratedRegulars.Regular2Branches.rbegin()->second;
 
-	if (enumeratedDeltas.Delta2Increments.empty())
+	if (enumeratedBranches.Branch2Increments.empty())
 		return 0;
 
-	auto& enumeratedIncrements = enumeratedDeltas.Delta2Increments.rbegin()->second.IncrementBackupFileRels;
+	auto& enumeratedIncrements = enumeratedBranches.Branch2Increments.rbegin()->second.IncrementBackupFileRels;
 
 	return enumeratedIncrements.size();
 
@@ -43,47 +43,22 @@ LastRegularBackupInfo Storage::GetLastBackupsInfo(const BackupBase& backup) cons
 
 RegularBackupList Storage::GetEnumeratedBackupFiles(const BackupBase& backup) const
 {
-	auto it = m_BackupName2RegularBackupListCache.find(backup.m_ArchiveName);
-
-	if (it == m_BackupName2RegularBackupListCache.end())
-	{
-		auto& enumed = m_BackupName2RegularBackupListCache[backup.m_ArchiveName] = DoGetEnumeratedBackupFiles(backup);
-		return enumed;
-	}
-	else
-		return it->second;
-}
-
-void Storage::UpdateCache(const BackupBase& backup)
-{
-	m_BackupName2RegularBackupListCache[backup.m_ArchiveName] = DoGetEnumeratedBackupFiles(backup);
-}
-
-Storage::Storage(Reserver* reserver) : m_Reserver(reserver)
-{
-	assert(reserver);
+	return DoGetEnumeratedBackupFiles(backup);	
 }
 
 
 
 
-void Storage::CopyFiles(const CopyList& downloadList)
-{
-	for (auto& download : downloadList)
-	{
-		fs::copy_file(download.first, download.second);
-	}
-}
 
 RegularBackupList LocalDiskStorage::DoGetEnumeratedBackupFiles(const BackupBase& backup) const
-{
-	wstring path =	m_Path + L"\\" + GeneralSettings::Instance().m_CloudRCopyDirName + L"\\" + backup.m_ArchiveName;
+{	
+	wstring path =	m_Path + L"\\" + backup.m_Name;
 	return LocalDiskIOManager::Instance().EnumerateBackupFiles(path);
 }
 
 void LocalDiskStorage::StartDownloading(const CopyList& copylist, Completer* completer, const Completion& completion)
 {
-	wstring path = m_Path + L"\\" + GeneralSettings::Instance().m_CloudRCopyDirName + L"\\";
+	wstring path = m_Path + L"\\";
 	CopyList copylist2 = copylist;
 
 	for (auto& download : copylist2)
@@ -96,7 +71,7 @@ void LocalDiskStorage::StartDownloading(const CopyList& copylist, Completer* com
 
 void LocalDiskStorage::StartUploading(const CopyList& copylist, Completer* completer, const Completion& completion)
 {
-	wstring path = m_Path + L"\\" + GeneralSettings::Instance().m_CloudRCopyDirName + L"\\";
+	wstring path = m_Path + L"\\";
 
 	CopyList copylist2 = copylist;
 
@@ -108,15 +83,15 @@ void LocalDiskStorage::StartUploading(const CopyList& copylist, Completer* compl
 	LocalDiskIOManager::Instance().StartCopyFiles(copylist2, completer, completion);
 }
 
-void LocalDiskStorage::StartRemovingOld(const RemoveList& removeList, Completer* completer, const Completion& completion)
+void LocalDiskStorage::StartRemoving(const RemoveList& removeList, Completer* completer, const Completion& completion)
 {
-	wstring path = m_Path + L"\\" + GeneralSettings::Instance().m_CloudRCopyDirName + L"\\";
+	wstring path = m_Path + L"\\";
 	auto removeList2 = removeList;
 
 	for (auto& file : removeList2)
 	{
 		file = path + file;
-	}
+	}	
 
 	LocalDiskIOManager::Instance().StartRemoveFiles(removeList2, completer, completion);
 }
@@ -144,7 +119,7 @@ void WebDavStorage::StartUploading(const CopyList& copylist, Completer* complete
 	InternetIOManager::Instance().StartUploadFiles(move(event), completer, completion);
 }
 
-void WebDavStorage::StartRemovingOld(const RemoveList& removeList, Completer* completer, const Completion& completion)
+void WebDavStorage::StartRemoving(const RemoveList& removeList, Completer* completer, const Completion& completion)
 {		
 	InternetRemoveEvent event;
 	event.storage = this;
@@ -154,33 +129,94 @@ void WebDavStorage::StartRemovingOld(const RemoveList& removeList, Completer* co
 	InternetIOManager::Instance().StartRemoveFiles(move(event), completer, completion);
 }
 
-void WebDavStorage::Mount(const wstring& mountPoint) const
-{
-	RunCMD(L"net use " + mountPoint + L" \"" + m_Url + L"\" /USER:\"" + m_UserName + L"\" \"" + m_Password + L"\" /PERSISTENT:NO");
-}
-
 bool RegularBackupList::Empty()
 {
-	return Regular2Deltas.empty();
+	return Regular2Branches.empty();
+}
+
+size_t RegularBackupList::TotalNumFiles() const
+{
+	size_t result = Regular2Branches.size();
+	for (auto& r2d : Regular2Branches)
+	{
+		auto& branch2Increments = r2d.second.Branch2Increments;
+		result += branch2Increments.size();
+		for (auto& d2i : branch2Increments)
+		{
+			result += d2i.second.IncrementBackupFileRels.size();
+		}
+	}
+	return result;
+}
+
+bool RegularBackupList::HasFileWithTimeStamp(const wstring& timestamp)
+{
+	for (auto& r2b : Regular2Branches)
+	{
+		wstring regularTimestamp = ExtractTimestampFromFilename(r2b.first);
+		if (regularTimestamp == timestamp)
+			return true;
+
+		auto& branch2increments = r2b.second.Branch2Increments;
+
+		for (auto& b2i : branch2increments)
+		{
+			for (auto increment : b2i.second.IncrementBackupFileRels)
+			{
+				wstring incrementTimestamp = ExtractTimestampFromFilename(fs::path(increment).filename());
+				if (incrementTimestamp == timestamp)
+					return true;
+			}
+		}
+	}
+
+	return false;
 }
 
 LastRegularBackupInfo LastRegularBackupInfo::CreateFromBackupInfoList(const RegularBackupList& backup)
 {
 	LastRegularBackupInfo result;
 	
-	if (!backup.Regular2Deltas.empty())
+	if (!backup.Regular2Branches.empty())
 	{
-		auto& regularInfo = *backup.Regular2Deltas.rbegin();
+		auto& regularInfo = *backup.Regular2Branches.rbegin();
 		result.LastRegularFilename = regularInfo.first;
 
-		if (!regularInfo.second.Delta2Increments.empty())
+		if (!regularInfo.second.Branch2Increments.empty())
 		{
-			auto& deltaInfo = *regularInfo.second.Delta2Increments.rbegin();
-
-			result.LastDeltaFilename = deltaInfo.first;
-			result.IncrementFilenames = deltaInfo.second.IncrementBackupFileRels;
+			auto& branchInfo = *regularInfo.second.Branch2Increments.rbegin();						
+			result.LastIncrementFileRels = branchInfo.second.IncrementBackupFileRels;
 		}
 	}
 
 	return result;
+}
+
+bool LastRegularBackupInfo::Empty() const
+{
+	return LastRegularFilename.empty() && LastIncrementFileRels.empty();
+}
+
+std::wstring LastRegularBackupInfo::GetLastFile() const
+{	
+	if (LastIncrementFileRels.empty())
+	{
+		return LastRegularFilename;
+	}
+	else
+	{
+		return *LastIncrementFileRels.rbegin();
+	}	
+}
+
+std::wstring LastRegularBackupInfo::GetLastBackupTimestamp() const
+{
+	auto fileRel = GetLastFile();
+	wstring filename = fs::path(fileRel).filename();
+	return  ExtractTimestampFromFilename(filename);
+}
+
+fs::file_time_type LastRegularBackupInfo::GetLastBackupTime() const
+{	
+	return  date2file_time_type(GetLastBackupTimestamp());
 }

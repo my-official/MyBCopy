@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/">
+        <file>Rokey-Seed-Open-folder.ico</file>
+        <file>Iconmoon-Viva-Control-Panel.ico</file>
+        <file>Ampeross-Lamond-Help.ico</file>
+        <file>Custom-Icon-Design-All-Country-Flag-Russia-Flag.ico</file>
+        <file>Custom-Icon-Design-All-Country-Flag-United-Kingdom-flag.ico</file>
+        <file>Ariil-Alphabet-Letter-M.ico</file>
+        <file>Ariil-Alphabet-Letter-B.ico</file>
+    </qresource>
+</RCC>

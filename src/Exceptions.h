@@ -1,6 +1,10 @@
 #pragma once
 
 
+#ifndef MyException_API
+#define MyException_API
+#endif
+
 
 #if defined(UNICODE) || defined(_UNICODE)
 #define	universal_string	std::wstring
@@ -10,7 +14,7 @@
 
 	
 
-	class RuntimeException
+	class MyException_API RuntimeException
 	{
 	public:		
 		RuntimeException() = default;
@@ -46,7 +50,7 @@
 //#if 1
 
 	//template <class DerivedClass>
-	class DebugException : public RuntimeException
+	class MyException_API DebugException : public RuntimeException
 	{
 	public:
 		using RuntimeException::RuntimeException;
@@ -75,9 +79,11 @@
 #define EXCEPTION(exceptionInstance)	exceptionInstance
 #endif
 	
+	#define EXCEPTION_FUNC EXCEPTION( BaseException(__func__))
 
+	
 
-	class CachedMessageException : public BaseException
+	class MyException_API CachedMessageException : public BaseException
 	{
 	public:		
 		using BaseException::BaseException;
@@ -89,7 +95,7 @@
 
 
 
-	class WinException : public CachedMessageException
+	class MyException_API WinException : public CachedMessageException
 	{
 	public:
 		WinException(DWORD errorCode = GetLastError());
@@ -103,10 +109,11 @@
 
 	
 
-	class ErrnoException : public WinException
+	class MyException_API ErrnoException : public WinException
 	{
 	public:
 		ErrnoException();				
+		ErrnoException(errno_t err);
 		int m_Errno;
 
 	protected:		
@@ -115,7 +122,7 @@
 
 
 
-	class DataException : public BaseException
+	class MyException_API DataException : public BaseException
 	{
 	public:
 		using BaseException::BaseException;

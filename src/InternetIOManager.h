@@ -7,7 +7,7 @@
 
 struct InternetEventData : public EventTypeSpecificData
 {
-	const WebDavStorage* storage;
+	const WebDavStorage* storage;	
 };
 
 

@@ -1,3 +1,3 @@
-#include "stdafx.h"
+#include "MyBCopy_pch.h"
 #include "ThreadedEventLoop.h"
 

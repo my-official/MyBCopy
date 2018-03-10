@@ -1,7 +1,8 @@
-#include "stdafx.h"
+#include "MyBCopy_pch.h"
 #include "WebDavMountManager.h"
-#include "UtilsMyRCopy.h"
+#include "UtilsMyBCopy.h"
 #include "Utils.h"
+#include "Exceptions.h"
 
 
 const size_t WebDavMountManager::MaxMounts = 2;
@@ -69,8 +70,8 @@ void WebDavMountManager::Release(const wstring& address) noexcept
 
 void WebDavMountManager::DoEraseUnused()
 {	
-	if (m_UseCounters.size() < MaxMounts)
-		return;
+	//if (m_UseCounters.size() < MaxMounts)
+	//	return;
 
 	for (auto it = m_UseCounters.begin(); it != m_UseCounters.end(); )
 	{
@@ -84,23 +85,23 @@ void WebDavMountManager::DoEraseUnused()
 		}
 	}
 
-	if (m_UseCounters.size() >= MaxMounts)
-	{
-		throw EXCEPTION( BaseException("bad alloc of new mount point") );
-	}
+	//if (m_UseCounters.size() >= MaxMounts)
+	//{
+	//	throw EXCEPTION( BaseException("bad alloc of new mount point") );
+	//}
 }
 
 WebDavMountManager::MountPointDesc::MountPointDesc(const wstring& address, const wstring& username, const wstring& password) : m_UseCounter(1), m_Address(address)
 {
 	wstring mountPoint = GetFreeMountPoint();
-	RunCMD(L"net use " + mountPoint + L" \"" + m_Address + L"\" /USER:\"" + username + L"\" \"" + password + L"\" /PERSISTENT:NO");
+	ExecuteProgram_except(L"net", L"use " + mountPoint + L" \"" + m_Address + L"\" /USER:\"" + username + L"\" \"" + password + L"\" /PERSISTENT:NO");
 	m_MountPoint.swap(mountPoint);
 }
 
 void WebDavMountManager::MountPointDesc::Unmount()
 {
 	if (!m_MountPoint.empty())
-		RunCMD(L"net use " + m_MountPoint + L" /DELETE /y");
+		ExecuteProgram_except(L"net", L"use " + m_MountPoint + L" /DELETE /y");
 }
 
 WebDavMountManager::MountPointDesc::~MountPointDesc()

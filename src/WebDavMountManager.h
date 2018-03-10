@@ -4,11 +4,12 @@
 class WebDavMount;
 
 
-class WebDavMountManager : public Singleton<WebDavMountManager>
+class MyBCopy_API WebDavMountManager : public Singleton<WebDavMountManager>
 {
 public:	
 	WebDavMount Mount(const wstring& address, const wstring& username, const wstring& password);	
 	void EraseUnused();
+	
 
 	static const size_t MaxMounts;
 private:
@@ -36,7 +37,6 @@ private:
 	map<wstring, MountPointDesc> m_UseCounters;
 
 	void IncConter(const wstring& address);
-
 	void Release(const wstring& address) noexcept;
 	void DoEraseUnused();	
 };
@@ -45,7 +45,7 @@ private:
 
 
 
-class WebDavMount
+class MyBCopy_API WebDavMount
 {
 public:
 	WebDavMount(WebDavMountManager* owner, const wstring& address, const wstring& mountPoint);

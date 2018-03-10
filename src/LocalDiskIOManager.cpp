@@ -1,7 +1,7 @@
-#include "stdafx.h"
+#include "MyBCopy_pch.h"
 #include "LocalDiskIOManager.h"
 #include "Utils.h"
-#include "UtilsMyRCopy.h"
+#include "UtilsMyBCopy.h"
 
 LocalDiskIOManager::LocalDiskIOManager()
 {
@@ -12,7 +12,7 @@ void LocalDiskIOManager::StartCopyFiles(const CopyList& downloadList, Completer*
 {
 	LocalDiskCopyEvent event;
 	event.downloadList = downloadList;	
-
+	
 	IOManagerEvent e(EventType::Downloading, move(event), completer, completion);
 	PushEvent(move(e));
 }
@@ -23,7 +23,7 @@ void LocalDiskIOManager::StartRemoveFiles(const RemoveList& removeList, Complete
 	LocalDiskRemoveEvent event;
 	event.removeList = removeList;
 
-	IOManagerEvent e(EventType::Delete,move(event), completer, completion);
+	IOManagerEvent e(EventType::Remove,move(event), completer, completion);
 	PushEvent(move(e));
 }
 
@@ -37,8 +37,7 @@ RegularBackupList LocalDiskIOManager::EnumerateBackupFiles(const wstring& backup
 	event.lastBackupsList = &result;
 
 
-	Completion completion;
-	completion.job = nullptr;
+	Completion completion = Completion::CreateEmpty();
 
 	Completer completer;
 
@@ -65,17 +64,17 @@ bool LocalDiskIOManager::HandleEvent(IOManagerEvent& e)
 
 			for (auto& download : event.downloadList)
 			{
-				CopyFileAndPrint(download.first, download.second, false);
+				_copy_file(download.first, download.second);
 			}			
 		}
 		break;		
-		case EventType::Delete:
-		{
+		case EventType::Remove:
+		{			
 			auto& event = *static_cast<LocalDiskRemoveEvent*>(e.m_SpecificData.get());
 			
 			for (auto& file : event.removeList)
 			{
-				RemoveFileAndPrint(file);
+				_force_remove_all(file);
 			}
 		}
 		break;

@@ -76,7 +76,7 @@ void ThreadedEventLoop<EventT>::StartEventLoop()
 //
 //		do
 //		{
-//			if (!HandleEvent(events.back()))
+//			if (!HandleEvent(events.front()))
 //			{
 //				events.pop();
 //			}

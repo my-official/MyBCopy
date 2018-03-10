@@ -1,7 +1,7 @@
-#include "stdafx.h"
+#include "MyBCopy_pch.h"
 #include "InternetIOManager.h"
 #include "Utils.h"
-#include "UtilsMyRCopy.h"
+#include "UtilsMyBCopy.h"
 #include "WebDavMountManager.h"
 
 
@@ -61,7 +61,7 @@ void InternetIOManager::StartUploadFiles(InternetCopyEvent&& event, Completer* c
 
 void InternetIOManager::StartRemoveFiles(InternetRemoveEvent&& event, Completer* completer, const Completion& completion)
 {
-	IOManagerEvent e(EventType::Delete, move(event), completer, completion);
+	IOManagerEvent e(EventType::Remove, move(event), completer, completion);
 	PushEvent(move(e));
 }
 
@@ -71,14 +71,13 @@ RegularBackupList InternetIOManager::EnumerateBackupFiles(const WebDavStorage* s
 	RegularBackupList result;
 
 	InternetEnumEvent event;
-	event.path = backup.m_ArchiveName;
+	event.path = backup.m_Name;
 	event.storage = storage;
 
 	event.lastBackupsList = &result;
 
 
-	Completion completion;
-	completion.job = nullptr;
+	Completion completion = Completion::CreateEmpty();
 
 	Completer completer;
 
@@ -129,7 +128,7 @@ bool InternetIOThread::HandleEvent(IOManagerEvent& e)
 			ProcessUploading(event);
 		}
 		break;
-		case EventType::Delete:
+		case EventType::Remove:
 		{
 			auto& event = *static_cast<InternetRemoveEvent*>(e.m_SpecificData.get());
 			ProcessRemoving(event);
@@ -150,59 +149,53 @@ bool InternetIOThread::HandleEvent(IOManagerEvent& e)
 
 void InternetIOThread::ProcessDownloading(InternetCopyEvent& event)
 {
-	wstring cloudRCopyDirName = m_Mount->MountPoint() + L"\\" + GeneralSettings::Instance().m_CloudRCopyDirName;
+	wstring cloudDirName = m_Mount->MountPoint() + L"\\";
+	if (!event.storage->m_BackupDirName.empty())
+		cloudDirName += event.storage->m_BackupDirName + L"\\";
 
 	for (auto& download : event.downloadList)
 	{
-		download.first = cloudRCopyDirName + L"\\" + download.first;
+		download.first = cloudDirName + download.first;
 
-		CopyFileAndPrint(download.first, download.second, false);		
+		_copy_file(download.first, download.second);		
 	}
 }
 
 void InternetIOThread::ProcessUploading(InternetCopyEvent& event)
 {
-	wstring cloudRCopyDirName = m_Mount->MountPoint() + L"\\" + GeneralSettings::Instance().m_CloudRCopyDirName;
+	wstring cloudDirName = m_Mount->MountPoint() + L"\\";
+	if (!event.storage->m_BackupDirName.empty())
+		cloudDirName += event.storage->m_BackupDirName + L"\\";
 
 	for (auto& download : event.downloadList)
 	{
-		download.second = cloudRCopyDirName + L"\\" + download.second;
+		download.second = cloudDirName + download.second;
 
-		CopyFileAndPrint(download.first, download.second);		
+		_copy_file(download.first, download.second);
 	}
-
-
 }
 
 void InternetIOThread::ProcessRemoving(InternetRemoveEvent& event)
 {
-	wstring cloudRCopyDirName = m_Mount->MountPoint() + L"\\" + GeneralSettings::Instance().m_CloudRCopyDirName;
+	wstring cloudDirName = m_Mount->MountPoint() + L"\\";
+	if (!event.storage->m_BackupDirName.empty())
+		cloudDirName += event.storage->m_BackupDirName + L"\\";
 
 	for (auto& file : event.removeList)
 	{
-		file = cloudRCopyDirName + L"\\" + file;
+		file = cloudDirName + file;
 
-
-		if (!fs::exists(file))
-			continue;
-
-		if (fs::is_directory(file))
-		{
-			fs::remove_all(file);
-		}
-		else
-		{
-			fs::remove(file);
-		}
+		_force_remove_all(file);
 	}
-
-	
 }
 
 
 void InternetIOThread::ProcessEnumeration(InternetEnumEvent& event)
 {
-	wstring path = m_Mount->MountPoint() + L"\\" + GeneralSettings::Instance().m_CloudRCopyDirName + L"\\" + event.path;
+	wstring path = m_Mount->MountPoint() + L"\\";
+	if (!event.storage->m_BackupDirName.empty())
+		path += event.storage->m_BackupDirName + L"\\";
+	path += event.path;
 	*event.lastBackupsList = EnumBackupFiles(path) ;
 }
 

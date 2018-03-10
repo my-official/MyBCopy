@@ -30,7 +30,7 @@ enum class EventType
 {
 	Downloading,
 	Uploading,
-	Delete,
+	Remove,
 	Enumeration,
 	Quit
 };
@@ -49,11 +49,11 @@ public:
 	explicit IOManagerEvent(nullptr_t);
 
 	template <class TYPE>
-	IOManagerEvent(EventType eventType, TYPE&& specificData, Completer* completer, Completion completion);
+	IOManagerEvent(EventType eventType, TYPE&& specificData, Completer* completer, const Completion& completion);
 
 
-	IOManagerEvent(IOManagerEvent&&) noexcept = default;
-	IOManagerEvent& operator=(IOManagerEvent&&) noexcept = default;
+	IOManagerEvent(IOManagerEvent&&) = default;
+	IOManagerEvent& operator=(IOManagerEvent&&) = default;
 
 	IOManagerEvent(const IOManagerEvent&) = delete;
 	IOManagerEvent& operator=(const IOManagerEvent&) = delete;
@@ -96,7 +96,7 @@ void ThreadedEventLoop<IOManagerEvent>::SendQuit();
 
 
 template <class TYPE>
-IOManagerEvent::IOManagerEvent(EventType eventType, TYPE&& specificData, Completer* completer, Completion completion)
+IOManagerEvent::IOManagerEvent(EventType eventType, TYPE&& specificData, Completer* completer, const Completion& completion)
 	: m_Type(eventType),
 	m_SpecificData(new TYPE(forward<TYPE>(specificData))),
 	m_Completer(completer),

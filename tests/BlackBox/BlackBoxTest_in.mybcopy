@@ -1,0 +1,86 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<!--你好-->
+
+<mybcopy version="2.1">
+  %TEMPORARY_DIR%
+  <verification>no</verification>
+
+  <storages>
+    <!--<storage name="YandexDisk" type="WebDav" url="https://webdav.yandex.ru" username="%yourYDAccountName%" password="%yourYDAccountPass%"/>
+    <storage name="OneDrive" type="WebDav" url="https://d.docs.live.net/%yourODAccountID%" username="%yourODAccountName@outlook.com or yourODAccountName@elsewhere.net%" password="%yourODAccountPass%"/>-->
+    
+    <storage name="Disk_D" type="LocalDisk" path="D:\MRCTest"/>
+    <storage name="Samba_V" type="LocalDisk" path="V:\mnt\MRCTest"/>
+  </storages>
+
+  <scheme type="incremental">
+    <num_increment_branches>2</num_increment_branches>
+    <length_increment_chain>2</length_increment_chain>    
+    <reference_storage>Disk_D</reference_storage>
+    <num_stored_old_regular_backups>2</num_stored_old_regular_backups>
+  </scheme>
+  
+  <toolchain>
+    <tool name="rar" type="rar" %OVERRIDE_RAR_EXE%  password="%мойПароль123 от Rar%"/>
+    <tool name="7z" type="7z" %OVERRIDE_7Z_EXE% password="%мойПароль123 от 7-zip%"/>
+  </toolchain>
+  
+  
+  <backup name="BlackBoxTestBackup1" comment="Комментарий на национальном языке 你好. Комментарий '𠃿' с использованием символа с кодом 0x200FF, который должен быть предствлен с использование суррогатной пары UTF-16">
+
+    <src path="%BACKUP1_DIR%">
+      <include_file_if>
+        <regexps ignore_case="no">.*\.cpp;.*\.h;.*\.xml;Makefile</regexps>
+      </include_file_if>
+
+      <include_file_if>
+        <wildcards>*.sln</wildcards>
+      </include_file_if>
+
+      <exclude_dir_if>
+        <regexps ignore_case="no">oldsfmgr</regexps>
+      </exclude_dir_if>      
+
+      <exclude_entry_if>
+        <wildcards>*gCc*</wildcards>
+      </exclude_entry_if>
+
+      <src path="sfchat\discovery" depth="0"/>
+    </src>
+
+    <src path="%BACKUP1_DIR%\sfchat\discovery\behaviortree" depth="nolimit"/>
+
+
+    <!--<src path="%newmgr_DIR%">
+      <include_file_if>
+        <wildcards>*.cpp;*.h;*.xml;Makefile</wildcards>
+      </include_file_if>
+
+      <exclude_entry_if>
+        <wildcards ignore_case="no">*gcc*</wildcards>
+      </exclude_entry_if>
+
+      <exclude_dir_if>
+        <wildcards ignore_case="no">sfmini</wildcards>
+      </exclude_dir_if>
+
+      <src path="galaxymgr\discovery" depth="1"/>
+      --><!--<src path="galaxymgr\discovery\behaviortree" depth="nolimit"/>--><!--
+    </src>
+
+    <src path="%newmgr_DIR%\galaxymgr\discovery\behaviortree" depth="nolimit"/>-->
+
+  </backup>
+
+  <!--<backup name="BlackBoxTestBackup2" comment="Комментарий '𠃿' с использованием символа с кодом 0x200FF, который должен быть предствлен с использование суррогатной пары UTF-16">
+    <src path="%CTorrent_DIR%">
+      <exclude_file_if>
+        <last_write_time>&lt;= 2009.01.01</last_write_time>
+        <last_write_time>&gt;= 1 year 6 months 1 week 2 days</last_write_time>
+        <size>&lt; 1 KB</size>
+      </exclude_file_if>
+    </src>
+  </backup>-->
+
+</mybcopy>

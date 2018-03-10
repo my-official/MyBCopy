@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "MyBCopy_pch.h"
 #include "Exceptions.h"
 
 
@@ -47,6 +47,8 @@ RuntimeException::RuntimeException(const std::wstring& text)
 		int result = MultiByteToWideChar(CP_ACP, 0, text, -1, data, textLength + 1);
 
 		assert(result);
+
+		m_ErrorMessage[prevErrorMessageLength + textLength] = '\n';
 #else
 		m_ErrorMessage += text;
 		m_ErrorMessage += "\n";
@@ -69,6 +71,8 @@ RuntimeException::RuntimeException(const std::wstring& text)
 		int result = MultiByteToWideChar(CP_ACP, 0, text.c_str(), -1, data, textLength + 1);
 
 		assert(result);
+
+		m_ErrorMessage[prevErrorMessageLength + textLength] = '\n';
 #else
 		m_ErrorMessage += text;
 		m_ErrorMessage += "\n";
@@ -180,6 +184,11 @@ RuntimeException::RuntimeException(const std::wstring& text)
 	}
 
 	ErrnoException::ErrnoException() : m_Errno(errno)
+	{
+
+	}
+
+	ErrnoException::ErrnoException(errno_t err) : m_Errno(static_cast<int>(err))
 	{
 
 	}

@@ -1,20 +1,24 @@
 #pragma once
 
-struct BackupJob;
-class Storage;
+
 
 class Completion
 {
 public:
-	virtual ~Completion() = default;
-
-	BackupJob* job;
-	Storage* storage;
-
-	void RethrowException();
-//private:
-//	friend class Completer;
+	using CompletionFunc = function<void()>;
+	using CompletionError = function<void(exception_ptr& exceptionPtr)>;	
+	
+	CompletionFunc m_CompletionFunc;	
+	CompletionError m_CompletionError;	
 	exception_ptr m_ExceptionPtr;
+
+
+	
+	Completion(const CompletionFunc& callbackFunction, const CompletionError& errorFunction);
+	void RethrowException();
+	static Completion CreateEmpty();
+private:
+	Completion() = default;
 };
 
 
@@ -31,6 +35,8 @@ private:
 
 	size_t					m_NumWaits = 0;
 
+public:
+	unsigned int NumRegisterWaits() const;
 };
 
 
