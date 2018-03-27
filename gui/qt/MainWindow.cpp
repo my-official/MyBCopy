@@ -57,9 +57,11 @@ MainWindow::MainWindow(QWidget *parent)
 	m_Model = new MainWindowBackupModel(this);
 	m_Model->SetSourceList(&m_MyBCopyFile.m_Backups);
 	ui->BackupTable->setModel(m_Model);
+	ui->BackupTable->addAction(ui->SetAction);
+	ui->BackupTable->addAction(ui->RemoveAction);
 	NewFile();	
-
 	UpdateLanguageFlagImage();
+
 }
 
 MainWindow::~MainWindow()

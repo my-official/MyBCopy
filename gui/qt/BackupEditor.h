@@ -49,7 +49,20 @@ private slots:
     
     void on_BackupEditor_finished(int result);
 
+	void on_FileSystemTreeView_customContextMenuRequested(const QPoint &pos);
+
 	bool ValidateBackupName();
+
+    
+
+    void on_AddInclusionSrcPathAction_triggered();
+    void on_AddExclusionSrcPathAction_triggered();
+    void on_RemoveSrcPathAction_triggered();
+    void on_TraverseAction_triggered();
+    void on_AddWildcardDialogFSAction_triggered();
+    void on_AddRegExpDialogFSAction_triggered();
+    void on_DepthFSAction_triggered();
+	void OnFSTraverseCompleted();
 
 private:
     Ui::BackupEditor* ui;
@@ -63,8 +76,13 @@ private:
 	void ForEachSelectedSrc(function<void(const QModelIndex&, QStandardItem*)> func);		
 	void ForEachSelectedSrc(const QModelIndexList& selectedRows, function<void(const QModelIndex&, QStandardItem*)> func);
 				
-	void ExecAddFilterDialog(FilterEditor* fileEditor, type_index filterType);
-	void ExecEditFilterDialog(FilterEditor* fileEditor, type_index filterType);				
+	void ExecAddFilterDialog(FilterEditor* fileEditor, type_index filterType, const list<QModelIndex>& idxSrcs);
+	void ExecEditFilterDialog(FilterEditor* fileEditor, type_index filterType);	
+	void ExecDepthDialog(const list<QPersistentModelIndex>& persistentSelectedSrcs);
+		
+	list<QModelIndex> GetSelectedInclusionSrcPaths();
+	QModelIndex GetSelectedIndexFS();
+	QModelIndex GetSelectedIdxSrcInFS();
 };
 
 

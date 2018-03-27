@@ -3,24 +3,14 @@
 
 
 		ModelIterator::ModelIterator(const QAbstractItemModel *model,
-			int row, int col, const QModelIndex& parent, ModelIterator::Direction dir)
+			int row, int col, const QModelIndex& parent)
 			: Model_(model)
 			, Parent_(parent)
 			, Row_(row)
-			, Col_(col)
-			, Dir_(dir)
+			, Col_(col)			
 		{
 		}
 
-		//ModelIterator::ModelIterator(QAbstractItemModel *model, const QModelIndex& idx, Direction dir /*= Direction::Rows*/)
-		//	: Model_(model)
-		//	, Parent_(idx.parent())
-		//	, Row_(idx.row())
-		//	, Col_(idx.column())
-		//	, Dir_(dir)
-		//{
-
-		//}
 
 		ModelIterator& ModelIterator::operator++ ()
 		{
@@ -78,12 +68,8 @@
 			return !(left == right);
 		}
 		bool operator< (const ModelIterator& left, const ModelIterator& right)
-		{
-			assert(left.Dir_ == right.Dir_);
-			if (left.Dir_ == ModelIterator::Direction::Rows)
-				return left.Row_ < right.Row_;
-			else
-				return left.Col_ < right.Col_;
+		{			
+			return left.Row_ < right.Row_;			
 		}
 
 		QModelIndex ModelIterator::operator*() const
@@ -103,30 +89,10 @@
 
 		int& ModelIterator::GetIncrementable()
 		{
-			switch (Dir_)
-			{
-			case Direction::Rows:
-				return Row_;
-			case Direction::Cols:
-				return Col_;
-			}
-
-			qWarning() << Q_FUNC_INFO
-				<< "unknown direction";
 			return Row_;
 		}
 
 		int ModelIterator::GetIncrementable() const
 		{
-			switch (Dir_)
-			{
-			case Direction::Rows:
-				return Row_;
-			case Direction::Cols:
-				return Col_;
-			}
-
-			qWarning() << Q_FUNC_INFO
-				<< "unknown direction";
 			return Row_;
 		}

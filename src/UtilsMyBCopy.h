@@ -8,8 +8,8 @@ wstring ExtractRegularTimeStampFromIncrementDirName(const wstring& incrementDirN
 
 
 
-wstring MakeRegularArchiveFileName(const wstring& nowTimestamp, const wstring& ext = L".7z");
-wstring MakeIncrementArchiveFileName(const wstring& nowTimestamp, const wstring& ext = L".7z");
+wstring MakeRegularArchiveFileBaseName(const wstring& nowTimestamp);
+wstring MakeIncrementArchiveFileBaseName(const wstring& nowTimestamp);
 wstring MakeIncrementArchivesDirName(const wstring& nowTimestamp, const wstring& regularTimestamp);
 
 

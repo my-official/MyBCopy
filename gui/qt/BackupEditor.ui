@@ -239,6 +239,9 @@
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
+          <property name="contextMenuPolicy">
+           <enum>Qt::CustomContextMenu</enum>
+          </property>
           <property name="sortingEnabled">
            <bool>true</bool>
           </property>
@@ -429,6 +432,62 @@
    </property>
    <property name="toolTip">
     <string>Edit selected regexp filters</string>
+   </property>
+  </action>
+  <action name="AddInclusionSrcPathAction">
+   <property name="text">
+    <string>Include path</string>
+   </property>
+   <property name="toolTip">
+    <string>Add entry to backup inclusion rules</string>
+   </property>
+  </action>
+  <action name="AddExclusionSrcPathAction">
+   <property name="text">
+    <string>Exclude path</string>
+   </property>
+   <property name="toolTip">
+    <string>Add entry as exclusion rule</string>
+   </property>
+  </action>
+  <action name="RemoveSrcPathAction">
+   <property name="text">
+    <string>Remove rule</string>
+   </property>
+   <property name="toolTip">
+    <string>Remove rule for selected entry</string>
+   </property>
+  </action>
+  <action name="TraverseAction">
+   <property name="text">
+    <string>Traverse</string>
+   </property>
+   <property name="toolTip">
+    <string>Check entries included to backup</string>
+   </property>
+  </action>
+  <action name="AddWildcardDialogFSAction">
+   <property name="text">
+    <string>Add wildcard filter...</string>
+   </property>
+   <property name="toolTip">
+    <string>Add new wildcard filter</string>
+   </property>
+  </action>
+  <action name="AddRegExpDialogFSAction">
+   <property name="text">
+    <string>Add regexp filter...</string>
+   </property>
+   <property name="toolTip">
+    <string>Add new regexp filter</string>
+   </property>
+  </action>
+  <action name="DepthFSAction">
+   <property name="text">
+    <string>Set depth limit...</string>
+   </property>
+   <property name="toolTip">
+    <string>Set depth limit</string>
    </property>
   </action>
  </widget>

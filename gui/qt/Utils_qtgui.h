@@ -29,6 +29,15 @@ void SpaceIfNotEmpty(QString& s);
 QString GetFilterSpecificText(Filters::FilterBase* filter);
 
 
+Filters::EntryType GetComboBox_EntryType(QComboBox* comboBox);
+bool GetComboBox_Inclusion(QComboBox* comboBox);
+
+void SetComboBox_EntryType(QComboBox* comboBox, Filters::EntryType value);
+void SetComboBox_Inclusion(QComboBox* comboBox, bool value);
+
+
+
+
 bool LessByPath(const SrcPathDesc& lhs, const SrcPathDesc& rhs);
 
 

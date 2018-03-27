@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>388</width>
-    <height>88</height>
+    <width>291</width>
+    <height>116</height>
    </rect>
   </property>
   <property name="contextMenuPolicy">
@@ -21,11 +21,48 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QComboBox" name="InclusionComboBox">
+       <item>
+        <property name="text">
+         <string>Include</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Exclude</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="EntryTypeComboBox">
+       <item>
+        <property name="text">
+         <string>files</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>directories</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>entries</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="QLabel" name="label_4">
        <property name="text">
-        <string>Regexps</string>
+        <string>by regexps</string>
        </property>
       </widget>
      </item>

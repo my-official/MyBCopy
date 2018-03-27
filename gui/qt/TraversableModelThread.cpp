@@ -21,7 +21,7 @@ void TraversableModelThread::on_TraverseRequired(int requestId, const ContainerO
 	ContainerOfSrcPathDesc& srcList = const_cast<ContainerOfSrcPathDesc&>(_srcList);
 
 	ParsedSources parsedSources;	
-	parsedSources.m_SrcPaths = move(srcList);
+	parsedSources.m_SrcPaths = srcList;
 
 	parsedSources.NormalizeRecursive();
 
@@ -67,6 +67,7 @@ void TraversableModelThread::on_TraverseRequired(int requestId, const ContainerO
 	DirName2EntryCheckStateMap checkedEntries;
 
 	ConvertTreeToLinear(rootEntries2CheckState, checkedEntries);
+	MarkSrcPaths(srcList,checkedEntries);
 	
 	emit TraverseCompleted(requestId, checkedEntries);
 }
@@ -79,5 +80,30 @@ void TraversableModelThread::ConvertTreeToLinear(const unordered_map<QString, En
 		ConvertTreeToLinear(p.second.m_SubEntries, checkedEntries, parentPath + p.first + "/");
 	}
 
+}
+
+void TraversableModelThread::MarkSrcPaths(const ContainerOfSrcPathDesc& srcList, DirName2EntryCheckStateMap& checkedEntries)
+{
+	for (auto& srcPath : srcList)
+	{
+		QString qPath = QString::fromStdWString(srcPath.m_Path);
+		qPath = QDir::cleanPath(qPath);
+
+		auto it = checkedEntries.find(qPath);
+		if (it == checkedEntries.end())
+		{			
+			auto p = checkedEntries.emplace(qPath, ExclusionCheckState);
+			it = p.first;
+		}
+
+		if (srcPath.m_Include)
+		{			
+			it->second = InclusionCheckState;		
+		}
+		else
+		{
+			it->second = ExclusionCheckState;
+		}
+	}
 }
 

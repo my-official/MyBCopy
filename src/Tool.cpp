@@ -6,7 +6,7 @@
 
 void SaveInclusionListFile(const list<wstring>& filesForArchive, const wstring& outfile)
 {
-	wofstream outstream(outfile);
+	ofstream outstream(outfile);
 
 	if (!outstream)
 		throw EXCEPTION(ErrnoException());
@@ -14,8 +14,9 @@ void SaveInclusionListFile(const list<wstring>& filesForArchive, const wstring& 
 	for (auto& file : filesForArchive)
 	{
 		//outstream << L"\"" << file << L"\"" << endl;
-		outstream << file << endl;
+		outstream << wstr2utf8(file) << endl;
 	}
+	//outstream.close();
 }
 
 

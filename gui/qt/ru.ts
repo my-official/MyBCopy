@@ -44,128 +44,174 @@
         <translation>Файловая система</translation>
     </message>
     <message>
-        <location filename="BackupEditor.ui" line="269"/>
+        <location filename="BackupEditor.ui" line="272"/>
         <source>Storages</source>
         <translation>Хранение резервных копии</translation>
     </message>
     <message>
-        <location filename="BackupEditor.ui" line="276"/>
-        <location filename="BackupEditor.ui" line="319"/>
-        <location filename="BackupEditor.ui" line="359"/>
+        <location filename="BackupEditor.ui" line="279"/>
+        <location filename="BackupEditor.ui" line="322"/>
+        <location filename="BackupEditor.ui" line="362"/>
         <source>Override backup-list settings</source>
         <translation>Заменить общие параметры</translation>
     </message>
     <message>
-        <location filename="BackupEditor.ui" line="312"/>
+        <location filename="BackupEditor.ui" line="315"/>
         <source>Toolchain</source>
         <translation>Цепочка утилит</translation>
     </message>
     <message>
-        <location filename="BackupEditor.ui" line="352"/>
+        <location filename="BackupEditor.ui" line="355"/>
         <source>Scheme</source>
         <translation>Схема резервного копирования</translation>
     </message>
     <message>
-        <location filename="BackupEditor.ui" line="380"/>
+        <location filename="BackupEditor.ui" line="383"/>
         <source>Create first backup now</source>
         <translation>Создать первый бекап сейчас</translation>
     </message>
     <message>
-        <location filename="BackupEditor.ui" line="388"/>
+        <location filename="BackupEditor.ui" line="391"/>
+        <location filename="BackupEditor.ui" line="471"/>
         <source>Add wildcard filter...</source>
         <translation>Добавить маску...</translation>
     </message>
     <message>
-        <location filename="BackupEditor.ui" line="391"/>
+        <location filename="BackupEditor.ui" line="394"/>
+        <location filename="BackupEditor.ui" line="474"/>
         <source>Add new wildcard filter</source>
         <translation>Добавить новую маску</translation>
     </message>
     <message>
-        <location filename="BackupEditor.ui" line="396"/>
+        <location filename="BackupEditor.ui" line="399"/>
+        <location filename="BackupEditor.ui" line="479"/>
         <source>Add regexp filter...</source>
         <translation>Добавить регулярное выражение...</translation>
     </message>
     <message>
-        <location filename="BackupEditor.ui" line="399"/>
+        <location filename="BackupEditor.ui" line="402"/>
+        <location filename="BackupEditor.ui" line="482"/>
         <source>Add new regexp filter</source>
         <translation>Добавить новое регулярное выражение</translation>
     </message>
     <message>
-        <location filename="BackupEditor.ui" line="404"/>
+        <location filename="BackupEditor.ui" line="407"/>
+        <location filename="BackupEditor.ui" line="487"/>
         <source>Set depth limit...</source>
         <translation>Установить глубину обхода...</translation>
     </message>
     <message>
-        <location filename="BackupEditor.ui" line="407"/>
+        <location filename="BackupEditor.ui" line="410"/>
+        <location filename="BackupEditor.ui" line="490"/>
         <source>Set depth limit</source>
         <translation>Установить глубину обхода</translation>
     </message>
     <message>
-        <location filename="BackupEditor.ui" line="412"/>
+        <location filename="BackupEditor.ui" line="415"/>
         <source>Remove selected</source>
         <translation>Удалить</translation>
     </message>
     <message>
-        <location filename="BackupEditor.ui" line="415"/>
+        <location filename="BackupEditor.ui" line="418"/>
         <source>Remove selected paths and filters</source>
         <translation>Удалить выбранные элементы</translation>
     </message>
     <message>
-        <location filename="BackupEditor.ui" line="420"/>
+        <location filename="BackupEditor.ui" line="423"/>
         <source>Edit selected wildcard filters...</source>
         <translation>Изменить маску...</translation>
     </message>
     <message>
-        <location filename="BackupEditor.ui" line="423"/>
+        <location filename="BackupEditor.ui" line="426"/>
         <source>Edit selected wildcard filters</source>
         <translation>Изменить выбранные маски</translation>
     </message>
     <message>
-        <location filename="BackupEditor.ui" line="428"/>
+        <location filename="BackupEditor.ui" line="431"/>
         <source>Edit selected regexp filters...</source>
         <translation>Изменить регулярное выражение...</translation>
     </message>
     <message>
-        <location filename="BackupEditor.ui" line="431"/>
+        <location filename="BackupEditor.ui" line="434"/>
         <source>Edit selected regexp filters</source>
         <translation>Изменить выбранные регулярные выражения</translation>
     </message>
     <message>
-        <location filename="BackupEditor.cpp" line="330"/>
-        <location filename="BackupEditor.cpp" line="338"/>
-        <location filename="BackupEditor.cpp" line="346"/>
-        <location filename="BackupEditor.cpp" line="617"/>
-        <location filename="BackupEditor.cpp" line="632"/>
+        <location filename="BackupEditor.ui" line="439"/>
+        <source>Include path</source>
+        <translation>Добавляющее правило</translation>
+    </message>
+    <message>
+        <location filename="BackupEditor.ui" line="442"/>
+        <source>Add entry to backup inclusion rules</source>
+        <translation>Добавить путь как правило включения в резервную копию</translation>
+    </message>
+    <message>
+        <location filename="BackupEditor.ui" line="447"/>
+        <source>Exclude path</source>
+        <translation>Исключающее правило</translation>
+    </message>
+    <message>
+        <location filename="BackupEditor.ui" line="450"/>
+        <source>Add entry as exclusion rule</source>
+        <translation>Добавить путь как правило исключения из резервной копии</translation>
+    </message>
+    <message>
+        <location filename="BackupEditor.ui" line="455"/>
+        <source>Remove rule</source>
+        <translation>Удалить правило</translation>
+    </message>
+    <message>
+        <location filename="BackupEditor.ui" line="458"/>
+        <source>Remove rule for selected entry</source>
+        <translation>Удалить правила для выделенных путей</translation>
+    </message>
+    <message>
+        <location filename="BackupEditor.ui" line="463"/>
+        <source>Traverse</source>
+        <translation>Траверс</translation>
+    </message>
+    <message>
+        <location filename="BackupEditor.ui" line="466"/>
+        <source>Check entries included to backup</source>
+        <translation>Отметить файлы, включаемые в бекап</translation>
+    </message>
+    <message>
+        <location filename="BackupEditor.cpp" line="292"/>
+        <location filename="BackupEditor.cpp" line="300"/>
+        <location filename="BackupEditor.cpp" line="308"/>
+        <location filename="BackupEditor.cpp" line="581"/>
+        <location filename="BackupEditor.cpp" line="596"/>
         <source>Error</source>
         <translation>Ошибка</translation>
     </message>
     <message>
-        <location filename="BackupEditor.cpp" line="330"/>
+        <location filename="BackupEditor.cpp" line="292"/>
         <source>No files for backup specified</source>
         <translation>Не задано ни одного файла для резервного копирования</translation>
     </message>
     <message>
-        <location filename="BackupEditor.cpp" line="338"/>
+        <location filename="BackupEditor.cpp" line="300"/>
         <source>No storages specified</source>
         <translation>Не задано ни одного хранилища резервных копий</translation>
     </message>
     <message>
-        <location filename="BackupEditor.cpp" line="346"/>
+        <location filename="BackupEditor.cpp" line="308"/>
         <source>No tools specified</source>
         <translation>Не задано ни одной программы для архивации/шифрования</translation>
     </message>
     <message>
-        <location filename="BackupEditor.cpp" line="617"/>
+        <location filename="BackupEditor.cpp" line="581"/>
         <source>Backup Name must be nonempty</source>
         <translation>Имя не может быть пустым</translation>
     </message>
     <message>
-        <location filename="BackupEditor.cpp" line="632"/>
+        <location filename="BackupEditor.cpp" line="596"/>
         <source>Backup &apos;</source>
         <translation>Бекап с именем &apos;</translation>
     </message>
     <message>
-        <location filename="BackupEditor.cpp" line="632"/>
+        <location filename="BackupEditor.cpp" line="596"/>
         <source>&apos; already exist</source>
         <translation>&apos; уже задан</translation>
     </message>
@@ -225,7 +271,7 @@
     </message>
     <message>
         <location filename="MainWindow.ui" line="130"/>
-        <location filename="MainWindow.cpp" line="261"/>
+        <location filename="MainWindow.cpp" line="263"/>
         <source>About</source>
         <translation>О программе</translation>
     </message>
@@ -255,33 +301,33 @@
         <translation>Изменить параметры</translation>
     </message>
     <message>
-        <location filename="MainWindow.cpp" line="91"/>
-        <location filename="MainWindow.cpp" line="118"/>
+        <location filename="MainWindow.cpp" line="93"/>
+        <location filename="MainWindow.cpp" line="120"/>
         <source>Error</source>
         <translation>Ошибка</translation>
     </message>
     <message>
-        <location filename="MainWindow.cpp" line="91"/>
+        <location filename="MainWindow.cpp" line="93"/>
         <source>Can&apos;t load file </source>
         <translation>Не могу загрузить файл </translation>
     </message>
     <message>
-        <location filename="MainWindow.cpp" line="118"/>
+        <location filename="MainWindow.cpp" line="120"/>
         <source>Can&apos;t write to file </source>
         <translation>Не могу записать в файл </translation>
     </message>
     <message>
-        <location filename="MainWindow.cpp" line="212"/>
+        <location filename="MainWindow.cpp" line="214"/>
         <source>MyBCopy Backup List (*.mybcopy *.xml);;All files (*.*)</source>
         <translation>Список резервных копий MyBCopy (*.mybcopy *.xml);;Все файлы (*.*)</translation>
     </message>
     <message>
-        <location filename="MainWindow.cpp" line="242"/>
+        <location filename="MainWindow.cpp" line="244"/>
         <source>MyBCopy Backup List (*.mybcopy)</source>
         <translation>Список резервных копий MyBCopy (*.mybcopy)</translation>
     </message>
     <message>
-        <location filename="MainWindow.cpp" line="261"/>
+        <location filename="MainWindow.cpp" line="263"/>
         <source>MyBCopy - backup tool.  Version 2.0
 
 Thanks to http://www.iconarchive.com</source>
@@ -337,7 +383,7 @@ Thanks to http://www.iconarchive.com</source>
 <context>
     <name>QObject</name>
     <message>
-        <location filename="RegexpFilterEditor.cpp" line="61"/>
+        <location filename="RegexpFilterEditor.cpp" line="66"/>
         <source>by regular expressions: </source>
         <translation>по регулярному вырожению: </translation>
     </message>
@@ -475,55 +521,58 @@ Thanks to http://www.iconarchive.com</source>
     <message>
         <location filename="Utils_qtgui.cpp" line="88"/>
         <source>entries</source>
+        <oldsource>Entries</oldsource>
         <translation>файлы и папки</translation>
     </message>
     <message>
         <location filename="Utils_qtgui.cpp" line="89"/>
         <source>directories</source>
-        <translation>директории</translation>
+        <oldsource>Directories</oldsource>
+        <translation>папки</translation>
     </message>
     <message>
         <location filename="Utils_qtgui.cpp" line="90"/>
         <source>files</source>
+        <oldsource>Files</oldsource>
         <translation>файлы</translation>
     </message>
     <message>
-        <location filename="Utils_qtgui.cpp" line="123"/>
+        <location filename="Utils_qtgui.cpp" line="124"/>
         <source>Include</source>
-        <translation>Включить</translation>
+        <translation>Добавлять</translation>
     </message>
     <message>
-        <location filename="Utils_qtgui.cpp" line="125"/>
+        <location filename="Utils_qtgui.cpp" line="126"/>
         <source>Exclude</source>
-        <translation>Исключить</translation>
+        <translation>Исключать</translation>
     </message>
     <message>
-        <location filename="Utils_qtgui.cpp" line="228"/>
+        <location filename="Utils_qtgui.cpp" line="267"/>
         <source>Username:</source>
         <translation>Имя пользователя:</translation>
     </message>
     <message>
-        <location filename="Utils_qtgui.cpp" line="238"/>
+        <location filename="Utils_qtgui.cpp" line="277"/>
         <source>WebDav</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="Utils_qtgui.cpp" line="268"/>
+        <location filename="Utils_qtgui.cpp" line="307"/>
         <source>Local Disk</source>
         <translation>Локальная папка</translation>
     </message>
     <message>
-        <location filename="Utils_qtgui.cpp" line="394"/>
+        <location filename="Utils_qtgui.cpp" line="433"/>
         <source>Rar executable (rar.exe)</source>
         <translation>Программа Rar (rar.exe)</translation>
     </message>
     <message>
-        <location filename="Utils_qtgui.cpp" line="422"/>
+        <location filename="Utils_qtgui.cpp" line="461"/>
         <source>7z executable (7z.exe)</source>
         <translation>Программа 7z (7z.exe)</translation>
     </message>
     <message>
-        <location filename="WildcardFilterEditor.cpp" line="41"/>
+        <location filename="WildcardFilterEditor.cpp" line="46"/>
         <source>by wildcards: </source>
         <translation>по маске: </translation>
     </message>
@@ -536,17 +585,42 @@ Thanks to http://www.iconarchive.com</source>
         <translation>Изменить</translation>
     </message>
     <message>
-        <location filename="RegexpFilterEditor.ui" line="28"/>
-        <source>Regexps</source>
-        <translation>Регулярное вырожение</translation>
+        <location filename="RegexpFilterEditor.ui" line="29"/>
+        <source>Include</source>
+        <translation>Добавлять</translation>
     </message>
     <message>
-        <location filename="RegexpFilterEditor.ui" line="35"/>
+        <location filename="RegexpFilterEditor.ui" line="34"/>
+        <source>Exclude</source>
+        <translation>Исключать</translation>
+    </message>
+    <message>
+        <location filename="RegexpFilterEditor.ui" line="43"/>
+        <source>files</source>
+        <translation>файлы</translation>
+    </message>
+    <message>
+        <location filename="RegexpFilterEditor.ui" line="48"/>
+        <source>directories</source>
+        <translation>папки</translation>
+    </message>
+    <message>
+        <location filename="RegexpFilterEditor.ui" line="53"/>
+        <source>entries</source>
+        <translation>файлы и папки</translation>
+    </message>
+    <message>
+        <location filename="RegexpFilterEditor.ui" line="65"/>
+        <source>by regexps</source>
+        <translation>по регулярному выражению</translation>
+    </message>
+    <message>
+        <location filename="RegexpFilterEditor.ui" line="72"/>
         <source>Example: invoice.*\.pdf;.manuscript.+</source>
         <translation>Пример: invoice.*\.pdf;.manuscript.+</translation>
     </message>
     <message>
-        <location filename="RegexpFilterEditor.ui" line="44"/>
+        <location filename="RegexpFilterEditor.ui" line="81"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;http://www.cplusplus.com/reference/regex/ECMAScript/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;See reference&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;http://www.cplusplus.com/reference/regex/ECMAScript/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Справочник&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
@@ -891,19 +965,6 @@ Thanks to http://www.iconarchive.com</source>
     </message>
 </context>
 <context>
-    <name>TraversableFSModel</name>
-    <message>
-        <location filename="TraversableFSModel.cpp" line="175"/>
-        <source>Are you sure?</source>
-        <translation>Вы уверены?</translation>
-    </message>
-    <message>
-        <location filename="TraversableFSModel.cpp" line="175"/>
-        <source>Source path description will be remove</source>
-        <translation>Путь и параметры будут удалены</translation>
-    </message>
-</context>
-<context>
     <name>WildcardFilterEditor</name>
     <message>
         <location filename="WildcardFilterEditor.ui" line="14"/>
@@ -911,47 +972,72 @@ Thanks to http://www.iconarchive.com</source>
         <translation>Изменить</translation>
     </message>
     <message>
-        <location filename="WildcardFilterEditor.ui" line="22"/>
-        <source>Masks</source>
-        <translation>Маска</translation>
+        <location filename="WildcardFilterEditor.ui" line="23"/>
+        <source>Include</source>
+        <translation>Добавлять</translation>
     </message>
     <message>
-        <location filename="WildcardFilterEditor.ui" line="29"/>
+        <location filename="WildcardFilterEditor.ui" line="28"/>
+        <source>Exclude</source>
+        <translation>Исключать</translation>
+    </message>
+    <message>
+        <location filename="WildcardFilterEditor.ui" line="37"/>
+        <source>files</source>
+        <translation>файлы</translation>
+    </message>
+    <message>
+        <location filename="WildcardFilterEditor.ui" line="42"/>
+        <source>directories</source>
+        <translation>папки</translation>
+    </message>
+    <message>
+        <location filename="WildcardFilterEditor.ui" line="47"/>
+        <source>entries</source>
+        <translation>файлы и папки</translation>
+    </message>
+    <message>
+        <location filename="WildcardFilterEditor.ui" line="59"/>
+        <source>by masks</source>
+        <translation>по маске</translation>
+    </message>
+    <message>
+        <location filename="WildcardFilterEditor.ui" line="66"/>
         <source>Example: *.txt;*.mp3</source>
         <translation>Пример: *.txt;*.mp3</translation>
     </message>
     <message>
-        <location filename="WildcardFilterEditor.ui" line="40"/>
+        <location filename="WildcardFilterEditor.ui" line="77"/>
         <source>Description</source>
         <translation>Описание</translation>
     </message>
     <message>
-        <location filename="WildcardFilterEditor.ui" line="51"/>
+        <location filename="WildcardFilterEditor.ui" line="88"/>
         <source>;</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="WildcardFilterEditor.ui" line="63"/>
+        <location filename="WildcardFilterEditor.ui" line="100"/>
         <source>delimiter</source>
         <translation>разделитель</translation>
     </message>
     <message>
-        <location filename="WildcardFilterEditor.ui" line="75"/>
+        <location filename="WildcardFilterEditor.ui" line="112"/>
         <source>?</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="WildcardFilterEditor.ui" line="87"/>
+        <location filename="WildcardFilterEditor.ui" line="124"/>
         <source>matches any number of any characters including none</source>
         <translation>любых символы (ноль или более раз)</translation>
     </message>
     <message>
-        <location filename="WildcardFilterEditor.ui" line="99"/>
+        <location filename="WildcardFilterEditor.ui" line="136"/>
         <source>matches any single character</source>
         <translation>один любой символ</translation>
     </message>
     <message>
-        <location filename="WildcardFilterEditor.ui" line="111"/>
+        <location filename="WildcardFilterEditor.ui" line="148"/>
         <source>*</source>
         <translation></translation>
     </message>

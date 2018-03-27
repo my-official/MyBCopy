@@ -42,7 +42,7 @@ Qt::CheckState TraverserAbstract::TraverseAsDirEntry(const fs::path& srcPathAbso
 
 		if (firstCheckState == IndeterminateCheckState)
 		{
-			dirCheckState.m_CheckState = Qt::Checked;
+			dirCheckState.m_CheckState = Qt::Unchecked;
 		}
 		else
 		{

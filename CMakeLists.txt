@@ -15,11 +15,15 @@ set (CMAKE_CXX_STANDARD 17)
 
 if(MSVC)	
     add_definitions(-DUNICODE -D_UNICODE)
-	add_compile_options(/MP)	
+	add_compile_options(/MP)		
 
-	option (Build_STATIC_RUNTIME "Linkage with static runtime library" OFF)	
-	if (Build_STATIC_RUNTIME)
-		add_compile_options(/MT)
+macro(ternary var boolean value1 value2)
+    set(${var} $<${${boolean}}:${value1}>$<$<NOT:${${boolean}}>:${value2}>)
+endmacro()
+
+	option (Build_STATIC_CRT "Linkage with static runtime library" OFF)	
+	if (Build_STATIC_CRT)		
+		add_compile_options($<$<CONFIG:Debug>:/MTd>$<$<NOT:$<CONFIG:Debug>>:/MT>)	
 	endif ()	
 endif()
 
@@ -78,5 +82,3 @@ if(MSVC)
 		SET_TARGET_PROPERTIES(${tg} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Output/$(Configuration))	
 	endforeach(tg)	
 endif()
-	
-

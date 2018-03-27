@@ -38,7 +38,7 @@
         </size>
        </property>
        <property name="contextMenuPolicy">
-        <enum>Qt::CustomContextMenu</enum>
+        <enum>Qt::ActionsContextMenu</enum>
        </property>
        <property name="selectionMode">
         <enum>QAbstractItemView::SingleSelection</enum>
@@ -205,8 +205,8 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="backupmodel.qrc"/>
   <include location="main.qrc"/>
+  <include location="backupmodel.qrc"/>
  </resources>
  <connections/>
 </ui>

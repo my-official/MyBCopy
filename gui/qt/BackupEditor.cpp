@@ -30,11 +30,12 @@ BackupEditor::BackupEditor(QWidget *parent)
 	TraversableFSModel* newBackup_FileSystemModel = new TraversableFSModel(m_BackupModel, ui->FileSystemTreeView);
 	newBackup_FileSystemModel->setRootPath("");
 	ui->FileSystemTreeView->setModel(newBackup_FileSystemModel);
-
 	ui->FileSystemTreeView->sortByColumn(0,Qt::AscendingOrder);
 
-	//header = ui->FileSystemTreeView->header();
-	//header->setDefaultSectionSize(350);
+	connect(newBackup_FileSystemModel, SIGNAL(TraverseCompleted()), this, SLOT(OnFSTraverseCompleted()));
+
+	QHeaderView* header = ui->FileSystemTreeView->header();
+	header->setDefaultSectionSize(250);
 }
 
 BackupEditor::~BackupEditor()
@@ -147,64 +148,25 @@ void BackupEditor::on_rotateButton_clicked()
 
 void BackupEditor::on_DepthAction_triggered()
 {
-	DepthEditor depthEditor;
-
 	QItemSelectionModel* selectionModel = ui->SrcDescTable->selectionModel();
 	assert(selectionModel->hasSelection());
 
 	QModelIndexList selectedRows = selectionModel->selectedRows();
 	list<QPersistentModelIndex> persistentSelectedSrcs;
 	
-	transform(selectedRows.begin(), selectedRows.end(), back_inserter(persistentSelectedSrcs), [&](const QModelIndex& idx)->QPersistentModelIndex
+	for (auto it = selectedRows.begin(); it != selectedRows.end(); ++it)
 	{
-		return m_ProxyBackupModel->mapToSource(idx);
-	});
-	
-	//copy_if(selectedRows.begin(), selectedRows.end(), back_inserter(persistentSelectedSrcs), [](const QModelIndex& idx)->bool
-	//{
-	//	return !idx.parent().isValid();
-	//});	
+		const QModelIndex& proxyIdx = *it;
+		QModelIndex srcDescIdx = m_ProxyBackupModel->mapToSource(proxyIdx);
+		if (srcDescIdx.parent().isValid())
+			srcDescIdx = srcDescIdx.parent();
 		
-
-	if (selectedRows.size() == 1)
-	{	
-		QModelIndex idx = m_ProxyBackupModel->mapToSource(selectedRows.front());
-		QModelIndex idxPath = idx;
-
-		if (idx.parent().isValid())
-			idxPath = idx.parent();
-
-		SrcPathDesc& srcDesc = *m_BackupModel->GetIterator(idxPath);
-		depthEditor.SetDepth(srcDesc.m_Depth);
+		const SrcPathDesc& srcPathDesc = m_BackupModel->GetSrcDescByIndex(srcDescIdx);
+		if (srcPathDesc.m_Include)
+			persistentSelectedSrcs.emplace_back(srcDescIdx);
 	}
 	
-	int returnCode = depthEditor.exec();
-	if (returnCode != QDialog::DialogCode::Accepted)
-		return;
-
-	auto depth = depthEditor.GetDepth();
-
-	unordered_set<SrcPathDescIterator> srcDescIters;
-
-	for (const QPersistentModelIndex& idx : persistentSelectedSrcs)
-	{
-		if (!idx.isValid())
-			continue;
-
-		QModelIndex idxPath = idx;
-
-		if (idx.parent().isValid())
-			idxPath = idx.parent();
-				
-		auto srcIter = m_BackupModel->GetIterator(idxPath);
-
-		auto p = srcDescIters.insert(srcIter);
-
-		if (!p.second)
-			continue;
-				
-		m_BackupModel->SetDepth(idxPath, depth);
-	}	
+	ExecDepthDialog(persistentSelectedSrcs);
 }
 
 void BackupEditor::on_RemoveSelectedAction_triggered()
@@ -412,7 +374,7 @@ void BackupEditor::ForEachSelectedSrc(const QModelIndexList& selectedRows, funct
 
 
 
-void BackupEditor::ExecAddFilterDialog(FilterEditor* fileEditor, type_index filterType)
+void BackupEditor::ExecAddFilterDialog(FilterEditor* fileEditor, type_index filterType, const list<QModelIndex>& idxSrcs)
 {
 	int returnCode = fileEditor->exec();
 	if (returnCode != QDialog::DialogCode::Accepted)
@@ -420,10 +382,10 @@ void BackupEditor::ExecAddFilterDialog(FilterEditor* fileEditor, type_index filt
 
 	auto filter = fileEditor->GetFilter();
 
-	ForEachSelectedSrc([this, &filter](const QModelIndex& idx, QStandardItem* item)
+	for (auto& idx : idxSrcs)
 	{
-		m_BackupModel->AppendFilter(m_ProxyBackupModel->mapToSource(idx), filter);
-	});
+		m_BackupModel->AppendFilter(idx, filter);
+	}
 }
 
 void BackupEditor::ExecEditFilterDialog(FilterEditor* fileEditor, type_index filterType)
@@ -499,7 +461,9 @@ void BackupEditor::on_SrcDescTable_customContextMenuRequested(const QPoint&)
 		break;
 		case BackupModel::EIT_SrcDescPath:
 		{
-			srcDescSelected = true;
+			const SrcPathDesc& srcPathDesc = m_BackupModel->GetSrcDescByIndex(idx);
+			if (srcPathDesc.m_Include)
+				srcDescSelected = true;
 		}
 		break;
 		default:
@@ -540,14 +504,14 @@ void BackupEditor::on_SrcDescTable_customContextMenuRequested(const QPoint&)
 
 void BackupEditor::on_AddWildcardDialogAction_triggered()
 {	
-	WildcardFilterEditor editorWindow;
-	ExecAddFilterDialog(&editorWindow, typeid(Filters::RegexpsFilter));
+	WildcardFilterEditor editorWindow;	
+	ExecAddFilterDialog(&editorWindow, typeid(Filters::WildcardsFilter), GetSelectedInclusionSrcPaths());
 }
 
 void BackupEditor::on_AddRegExpDialogAction_triggered()
 {
-	RegexpFilterEditor editorWindow;
-	ExecAddFilterDialog(&editorWindow, typeid(Filters::RegexpsFilter));
+	RegexpFilterEditor editorWindow;	
+	ExecAddFilterDialog(&editorWindow, typeid(Filters::RegexpsFilter), GetSelectedInclusionSrcPaths());
 }
 
 
@@ -648,3 +612,202 @@ bool BackupEditor::ValidateBackupName()
 //	auto mbcFile = backupEditor->m_MyBCopyFile;
 //	return mbcFile->m_Backups.end() == findBackupByName(mbcFile,input.toStdWString()) ? QValidator::State::Acceptable : QValidator::State::Invalid;
 //}
+
+
+
+QModelIndex BackupEditor::GetSelectedIndexFS()
+{
+	QItemSelectionModel* selectionModel = ui->FileSystemTreeView->selectionModel();
+	TraversableFSModel* traversableFSModel = qchecked_cast<TraversableFSModel>(ui->FileSystemTreeView->model());
+	QModelIndexList selectedRows = selectionModel->selectedRows();
+	assert(selectedRows.size() == 1);
+	return selectedRows.front();
+}
+
+void BackupEditor::ExecDepthDialog(const list<QPersistentModelIndex>& persistentSelectedSrcs)
+{
+	DepthEditor depthEditor;
+
+	if (persistentSelectedSrcs.size() == 1)
+	{
+		QModelIndex idx = persistentSelectedSrcs.front();
+		QModelIndex idxPath = idx;
+
+		if (idx.parent().isValid())
+			idxPath = idx.parent();
+
+		SrcPathDesc& srcDesc = *m_BackupModel->GetIterator(idxPath);
+		depthEditor.SetDepth(srcDesc.m_Depth);
+	}
+
+	int returnCode = depthEditor.exec();
+	if (returnCode != QDialog::DialogCode::Accepted)
+		return;
+
+	auto depth = depthEditor.GetDepth();
+
+	unordered_set<SrcPathDescIterator> srcDescIters;
+
+	for (const QPersistentModelIndex& idx : persistentSelectedSrcs)
+	{
+		if (!idx.isValid())
+			continue;
+
+		QModelIndex idxPath = idx;
+
+		if (idx.parent().isValid())
+			idxPath = idx.parent();
+
+		auto srcIter = m_BackupModel->GetIterator(idxPath);
+
+		auto p = srcDescIters.insert(srcIter);
+
+		if (!p.second)
+			continue;
+
+		m_BackupModel->SetDepth(idxPath, depth);
+	}
+}
+
+std::list<QModelIndex> BackupEditor::GetSelectedInclusionSrcPaths()
+{
+	list<QModelIndex> result;
+	ForEachSelectedSrc([&result, this](const QModelIndex& idx, QStandardItem* item)
+	{
+		QModelIndex srcDescIdx = m_ProxyBackupModel->mapToSource(idx);
+		const SrcPathDesc& srcPathDesc = m_BackupModel->GetSrcDescByIndex(srcDescIdx);
+		if (srcPathDesc.m_Include)
+			result.push_back(srcDescIdx);
+	});
+	return result;
+}
+
+QModelIndex BackupEditor::GetSelectedIdxSrcInFS()
+{
+	QModelIndex idx = GetSelectedIndexFS();
+
+	TraversableFSModel* traversableFSModel = qchecked_cast<TraversableFSModel>(ui->FileSystemTreeView->model());
+	fs::path fsPath = traversableFSModel->filePath(idx).toStdWString();
+
+	QModelIndex result = m_BackupModel->FindSrcDescByPath(fsPath);
+	assert(result.isValid());
+	return result;
+}
+
+void BackupEditor::on_FileSystemTreeView_customContextMenuRequested(const QPoint&)
+{
+	QItemSelectionModel* selectionModel = ui->FileSystemTreeView->selectionModel();
+	if (!selectionModel->hasSelection())
+		return;
+
+	QModelIndex idx = GetSelectedIndexFS();
+
+	QMenu* menu = new QMenu();
+	connect(menu, SIGNAL(aboutToHide()), menu, SLOT(deleteLater()));
+	menu->addAction(ui->TraverseAction);
+	menu->addSeparator();
+	
+	
+	TraversableFSModel* traversableFSModel = qchecked_cast<TraversableFSModel>(ui->FileSystemTreeView->model());
+	fs::path fsPath = traversableFSModel->filePath(idx).toStdWString();
+	
+	QModelIndex idxSrcPath = m_BackupModel->FindSrcDescByPath(fsPath);
+
+	if (idxSrcPath.isValid())
+	{
+		const SrcPathDesc& srcPathDesc = m_BackupModel->GetSrcDescByIndex(idxSrcPath);
+		if (srcPathDesc.m_Include)
+		{
+			menu->addAction(ui->AddWildcardDialogFSAction);
+			menu->addAction(ui->AddRegExpDialogFSAction);
+			menu->addSeparator();		
+			menu->addAction(ui->DepthFSAction);
+			menu->addSeparator();
+		}
+		menu->addAction(ui->RemoveSrcPathAction);
+	}
+	else
+	{
+		menu->addAction(ui->AddInclusionSrcPathAction);
+		menu->addAction(ui->AddExclusionSrcPathAction);	
+	}
+
+	menu->popup(QCursor::pos());
+}
+
+void BackupEditor::on_AddInclusionSrcPathAction_triggered()
+{
+	QModelIndex idx = GetSelectedIndexFS();	
+
+	TraversableFSModel* traversableFSModel = qchecked_cast<TraversableFSModel>(ui->FileSystemTreeView->model());
+	fs::path fsPath = traversableFSModel->filePath(idx).toStdWString();
+		
+	SrcPathDesc newSrcPath;
+	newSrcPath.m_Path = fsPath;
+	newSrcPath.m_Include = true;
+	m_BackupModel->Add(newSrcPath);
+}
+
+void BackupEditor::on_AddExclusionSrcPathAction_triggered()
+{
+	QModelIndex idx = GetSelectedIndexFS();
+
+	TraversableFSModel* traversableFSModel = qchecked_cast<TraversableFSModel>(ui->FileSystemTreeView->model());
+	fs::path fsPath = traversableFSModel->filePath(idx).toStdWString();	
+
+	SrcPathDesc newSrcPath;
+	newSrcPath.m_Path = fsPath;
+	newSrcPath.m_Include = false;
+	m_BackupModel->Add(newSrcPath);
+}
+
+void BackupEditor::on_RemoveSrcPathAction_triggered()
+{
+	QModelIndex idx = GetSelectedIndexFS();
+
+	TraversableFSModel* traversableFSModel = qchecked_cast<TraversableFSModel>(ui->FileSystemTreeView->model());
+	fs::path fsPath = traversableFSModel->filePath(idx).toStdWString();
+
+	QModelIndex idxSrcPath = m_BackupModel->FindSrcDescByPath(fsPath);
+	m_BackupModel->removeRow(idxSrcPath.row());
+}
+
+void BackupEditor::on_TraverseAction_triggered()
+{
+	TraversableFSModel* traversableFSModel = qchecked_cast<TraversableFSModel>(ui->FileSystemTreeView->model());	
+	traversableFSModel->InvokeTraverse();
+
+	ui->SrcDescTable->setDisabled(true);
+	ui->FileSystemTreeView->setContextMenuPolicy(Qt::ContextMenuPolicy::NoContextMenu);
+}
+
+void BackupEditor::on_AddWildcardDialogFSAction_triggered()
+{
+	WildcardFilterEditor editorWindow;
+	ExecAddFilterDialog(&editorWindow, typeid(Filters::WildcardsFilter), { GetSelectedIdxSrcInFS() });
+}
+
+void BackupEditor::on_AddRegExpDialogFSAction_triggered()
+{
+	RegexpFilterEditor editorWindow;
+	ExecAddFilterDialog(&editorWindow, typeid(Filters::RegexpsFilter), { GetSelectedIdxSrcInFS() });
+}
+
+void BackupEditor::on_DepthFSAction_triggered()
+{
+	//QModelIndex idx = GetSelectedIndexFS();
+
+	//TraversableFSModel* traversableFSModel = qchecked_cast<TraversableFSModel>(ui->FileSystemTreeView->model());
+	//fs::path fsPath = traversableFSModel->fileName(idx).toStdWString();
+
+	//QModelIndex idxSrcPath = m_BackupModel->FindSrcDescByPath(fsPath);
+	//list<QPersistentModelIndex> indexes;
+	//indexes.push_back(idxSrcPath);
+	ExecDepthDialog({ GetSelectedIdxSrcInFS() });
+}
+
+void BackupEditor::OnFSTraverseCompleted()
+{
+	ui->SrcDescTable->setDisabled(false);
+	ui->FileSystemTreeView->setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
+}

@@ -664,7 +664,7 @@ void RegularSchemeHandler::CompleteUploading(shared_ptr<Storage>& storage)
 
 void RegularSchemeHandler::CreateRegularBackup()
 {
-	wstring newBackupArchiveFileNameBase = MakeRegularArchiveFileName(m_NowTimestamp, L"");
+	wstring newBackupArchiveFileNameBase = MakeRegularArchiveFileBaseName(m_NowTimestamp);
 
 	TraversedBackup traversedBackup = TraversedBackup::CreateViaTraverseParsedBackup(m_Backup, m_Settings);
 
@@ -723,6 +723,7 @@ void RegularSchemeHandler::PostUploadCheck(shared_ptr<Storage>& storage)
 		
 	auto fileList = storage->GetLastBackupsInfo(m_Backup);
 	wstring lastRegularFileAtStorage = m_Backup.m_Name + L"\\" + fileList.LastRegularFilename;
+	
 	if (lastRegularFileAtStorage != m_UploadDestFileRelative)
 		throw EXCEPTION(BackupException(m_Backup, EBackupError::PostUploadCheck));
 }
@@ -967,7 +968,7 @@ void IncrementalSchemeHandler::CreateIncrementBackup()
 		throw EXCEPTION(BackupException(m_Backup, EBackupError::NoChangesForIncrementalBackup));		
 	}
 	
-	wstring newBackupArchiveFileNameBase = MakeIncrementArchiveFileName(m_NowTimestamp, L"");
+	wstring newBackupArchiveFileNameBase = MakeIncrementArchiveFileBaseName(m_NowTimestamp);
 	wstring srcFilename = MakeBackupArchiveFile(actualData, newBackupArchiveFileNameBase);		
 	
 	_force_remove_all(oldContentDir);
@@ -997,7 +998,7 @@ void IncrementalSchemeHandler::PostUploadCheck(shared_ptr<Storage>& storage)
 	LastRegularBackupInfo lastBackupInfo = storage->GetLastBackupsInfo(m_Backup);
 	if (lastBackupInfo.LastIncrementFileRels.empty())
 		throw EXCEPTION(BackupException(m_Backup, EBackupError::PostUploadCheck));
-	
+
 	wstring lastIncrementFileAtStorage = m_Backup.m_Name + L"\\" + *lastBackupInfo.LastIncrementFileRels.rbegin();
 
 	if (lastIncrementFileAtStorage != m_UploadDestFileRelative)

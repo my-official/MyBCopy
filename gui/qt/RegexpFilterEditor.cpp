@@ -19,7 +19,10 @@ RegexpFilterEditor::~RegexpFilterEditor()
 std::shared_ptr<Filters::FilterBase> RegexpFilterEditor::GetFilter() const
 {
 	QString regexps = ui->lineEdit->text();
-	return make_shared<RegexpsFilter>(regexps.toStdWString());
+	auto result = make_shared<RegexpsFilter>(regexps.toStdWString());
+	result->SetInclusion(GetComboBox_Inclusion(ui->InclusionComboBox));
+	result->SetEntryType(GetComboBox_EntryType(ui->EntryTypeComboBox));
+	return result;
 }
 
 void RegexpFilterEditor::SetFilter(const Filters::FilterBase* val)
@@ -27,6 +30,8 @@ void RegexpFilterEditor::SetFilter(const Filters::FilterBase* val)
 	auto filter = static_cast<const RegexpsFilter*>(val);
 	QString wildcards = QString::fromStdWString(filter->GetRegexsAsString());
 	ui->lineEdit->setText(wildcards);
+	SetComboBox_EntryType(ui->EntryTypeComboBox, val->GetEntryType());
+	SetComboBox_Inclusion(ui->InclusionComboBox, val->IsInclusion());
 	ValidateForm();
 }
 

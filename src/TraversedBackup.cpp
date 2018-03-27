@@ -478,10 +478,10 @@ void TraversedBackup::Traverser::Traverse(const SrcPathDesc& srcPath, const fs::
 							throw EXCEPTION(BaseException(L"Unknown filesystem element " + wstring(entityPath)));*/
 
 				if (!srcPath.m_Include)
-					return;
+					continue;
 
 				if (!FileFilters(entityPath))
-					return;
+					continue;
 
 				AddFileEntryPerRootPath(entityPath);
 			}
@@ -509,26 +509,30 @@ bool TraversedBackup::Filtering::FileFilters(const fs::path& entityPath)
 
 bool TraversedBackup::Filtering::ApplyFilters(const fs::path& entityPath, const vector<Filters::FilterBase* >& entrySpecificInclusionFilters, const vector< Filters::FilterBase* >& entrySpecificExclusionFilters)
 {
-	bool include = true;
-
-	if (!m_IncludeEntryFilters.empty())
+	if (!m_IncludeEntryFilters.empty() || !entrySpecificInclusionFilters.empty())
 	{
-		include = any_of(m_IncludeEntryFilters.begin(), m_IncludeEntryFilters.end(), [&entityPath](const Filters::FilterBase* filter)->bool
-		{
-			return filter->operator()(entityPath);
-		});
-	}
+		bool include = false;		
 
-	if (!entrySpecificInclusionFilters.empty())
-	{
-		include |= any_of(entrySpecificInclusionFilters.begin(), entrySpecificInclusionFilters.end(), [&entityPath](const Filters::FilterBase* filter)->bool
+		if (!m_IncludeEntryFilters.empty())
 		{
-			return filter->operator()(entityPath);
-		});
-	}
+			include = any_of(m_IncludeEntryFilters.begin(), m_IncludeEntryFilters.end(), [&entityPath](const Filters::FilterBase* filter)->bool
+			{
+				return filter->operator()(entityPath);
+			});
+		}
 
-	if (!include)
-		return false;
+		if (!entrySpecificInclusionFilters.empty())
+		{
+			include |= any_of(entrySpecificInclusionFilters.begin(), entrySpecificInclusionFilters.end(), [&entityPath](const Filters::FilterBase* filter)->bool
+			{
+				return filter->operator()(entityPath);
+			});
+		}
+
+		if (!include)
+			return false;
+	}
+	
 
 	bool exclude = false;
 

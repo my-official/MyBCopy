@@ -14,4 +14,5 @@ public slots:
 private:
 	TraversableFSModel* m_TraversableFSModel;	
 	void ConvertTreeToLinear(const unordered_map<QString, EntryCheckStateRec>& rootEntries2CheckState, DirName2EntryCheckStateMap& checkedEntries, const QString& parentPath = QString());
+	void MarkSrcPaths(const ContainerOfSrcPathDesc& srcList, DirName2EntryCheckStateMap& checkedEntries);
 };

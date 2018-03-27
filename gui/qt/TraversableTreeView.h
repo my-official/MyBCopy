@@ -34,4 +34,6 @@ private:
 	qreal m_Degree;
 	qreal m_DeltaDegPerFrame;
 	QPixmap m_IndeterminatePixmap;
+	QPixmap m_InclusionPixmap;	
+	QPixmap m_ExclusionPixmap;
 };

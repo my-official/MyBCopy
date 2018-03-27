@@ -118,7 +118,8 @@ void SpaceIfNotEmpty(QString& s)
 
 QString GetFilterSpecificText(Filters::FilterBase* filter)
 {
-	QString result;
+	QString result;	
+
 	if (filter->IsInclusion())
 		result += QObject::tr("Include");
 	else
@@ -131,6 +132,44 @@ QString GetFilterSpecificText(Filters::FilterBase* filter)
 	result += entryType + " ";
 
 	return result + FilterImplementatorSelector::Instance().GetFilterImplementator(filter)->GetSpecificText(filter);
+}
+
+Filters::EntryType GetComboBox_EntryType(QComboBox* comboBox)
+{
+	switch (comboBox->currentIndex())
+	{
+	case 0: return Filters::EntryType::File;
+	case 1: return Filters::EntryType::Dir;
+	case 2: return Filters::EntryType::Entry;
+	default:
+		assert(0);
+		throw EXCEPTION(BaseException());
+		break;
+	}
+}
+
+bool GetComboBox_Inclusion(QComboBox* comboBox)
+{
+	return comboBox->currentIndex() == 0;
+}
+
+void SetComboBox_EntryType(QComboBox* comboBox, Filters::EntryType value)
+{
+	switch (value)
+	{
+	case Filters::EntryType::File: comboBox->setCurrentIndex(0); break;
+	case Filters::EntryType::Dir: comboBox->setCurrentIndex(1); break;
+	case Filters::EntryType::Entry: comboBox->setCurrentIndex(2); break;
+	default:
+		assert(0);
+		throw EXCEPTION(BaseException());
+		break;
+	}
+}
+
+void SetComboBox_Inclusion(QComboBox* comboBox, bool value)
+{
+	return comboBox->setCurrentIndex(value ? 0 : 1);
 }
 
 std::type_index GetStorageTypeIndex(Storage* storage)

@@ -27,7 +27,7 @@ std::wstring NowTimestampAsString()
 
 std::wstring ExtractTimestampFromFilename(const wstring& filename)
 {
-	wregex validationMask(L_BkTimeStampMask LR"(_\w+\.7z)");
+	wregex validationMask(L_BkTimeStampMask LR"(_\w+\.\w+)");
 
 	if (!regex_match(filename, validationMask))
 		throw EXCEPTION(BaseException(L"wrong filename of regular backup archive. Filename == " + filename));
@@ -49,15 +49,15 @@ std::wstring ExtractRegularTimeStampFromIncrementDirName(const wstring& incremen
 
 
 
-std::wstring MakeRegularArchiveFileName(const wstring& nowTimestamp, const wstring& ext /*= L".7z"*/)
+std::wstring MakeRegularArchiveFileBaseName(const wstring& nowTimestamp)
 {
-	return nowTimestamp + L"_regular" + ext;
+	return nowTimestamp + L"_regular";
 }
 
 
-std::wstring MakeIncrementArchiveFileName(const wstring& nowTimestamp, const wstring& ext /*= L".7z"*/)
+std::wstring MakeIncrementArchiveFileBaseName(const wstring& nowTimestamp)
 {
-	return nowTimestamp + L"_increment" + ext;
+	return nowTimestamp + L"_increment";
 }
 
 std::wstring MakeIncrementArchivesDirName(const wstring& nowTimestamp, const wstring& regularTimestamp)
@@ -153,9 +153,9 @@ RegularBackupList EnumBackupFiles(const wstring& path)
 	if (!fs::exists(path))
 		return result;
 
-	wregex regularMask(L_BkTimeStampMask L"_regular\\.7z");	
+	wregex regularMask(L_BkTimeStampMask L"_regular");	
 	wregex incrementDirMask(L_BkTimeStampMask L"_increments_from_" L_BkTimeStampMask);
-	wregex incrementFileMask(L_BkTimeStampMask L"_increment\\.7z");
+	wregex incrementFileMask(L_BkTimeStampMask L"_increment");
 
 	list<wstring> increments;		
 
@@ -168,7 +168,7 @@ RegularBackupList EnumBackupFiles(const wstring& path)
 
 			for (auto& incrementFile : fs::directory_iterator(p.path()))
 			{
-				if (!regex_match(wstring(incrementFile.path().filename()), incrementFileMask))
+				if (!regex_match(wstring(incrementFile.path().stem()), incrementFileMask))
 					continue;
 
 				fs::path incrementWithRelPath = p.path().filename() / incrementFile.path().filename();
@@ -180,7 +180,7 @@ RegularBackupList EnumBackupFiles(const wstring& path)
 			if (!fs::is_regular_file(p.path()))
 				continue;
 
-			if (!regex_match(wstring(p.path().filename()), regularMask))
+			if (!regex_match(wstring(p.path().stem()), regularMask))
 				continue;
 			
 			result.Regular2Branches.emplace(p.path().filename(), IncrementBranchList());					
@@ -204,7 +204,7 @@ RegularBackupList EnumBackupFiles(const wstring& path)
 		wstring incrementDirName = fs::path(incrementFileRel).parent_path();
 		wstring timestampRegularFromIncrementDirName = ExtractRegularTimeStampFromIncrementDirName(incrementDirName);
 
-		IncrementBranchList& lostRegular = result.LostRegular2Branches[MakeRegularArchiveFileName(timestampRegularFromIncrementDirName)];
+		IncrementBranchList& lostRegular = result.LostRegular2Branches[MakeRegularArchiveFileBaseName(timestampRegularFromIncrementDirName) + fs::path(incrementFileRel).extension().wstring()];
 
 		Branch2IncrementListMap& branchMap = lostRegular.Branch2Increments;
 

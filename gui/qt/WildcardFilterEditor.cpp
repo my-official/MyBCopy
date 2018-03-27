@@ -21,7 +21,10 @@ WildcardFilterEditor::~WildcardFilterEditor()
 std::shared_ptr<Filters::FilterBase> WildcardFilterEditor::GetFilter() const
 {
 	QString wildcards = ui->lineEdit->text();
-	return make_shared<WildcardsFilter>(wildcards.toStdWString());
+	auto result = make_shared<WildcardsFilter>(wildcards.toStdWString());
+	result->SetInclusion(GetComboBox_Inclusion(ui->InclusionComboBox));
+	result->SetEntryType(GetComboBox_EntryType(ui->EntryTypeComboBox));
+	return result;
 }
 
 void WildcardFilterEditor::SetFilter(const Filters::FilterBase* val)
@@ -29,6 +32,8 @@ void WildcardFilterEditor::SetFilter(const Filters::FilterBase* val)
 	auto filter = static_cast<const WildcardsFilter*>(val);
 	QString wildcards = QString::fromStdWString( filter->GetWildcardsAsString() );
 	ui->lineEdit->setText(wildcards);
+	SetComboBox_EntryType(ui->EntryTypeComboBox, val->GetEntryType());
+	SetComboBox_Inclusion(ui->InclusionComboBox, val->IsInclusion());
 }
 
 

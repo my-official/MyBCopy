@@ -71,7 +71,7 @@ void BackupModel::ConvertToItemRow(QList<QStandardItem *>& newRow, iterator& it)
 	QStandardItem* itemPath = new QStandardItem(QString::fromStdWString(it->m_Path));
 	newRow << itemPath;
 	itemPath->setData(EItemType::EIT_SrcDescPath, EBackupItemRole::ItemTypeRole);		
-	itemPath->setData(it->m_Include ? m_IncludePixmap : m_ExcludePixmap, Qt::DecorationRole);
+	itemPath->setData(GetInclusionPixmap(it->m_Include), Qt::DecorationRole);
 
 	if (it->m_Depth != SrcPathDesc::Depthless)
 	{
@@ -96,6 +96,11 @@ QString BackupModel::DepthString(size_t depth)
 	return tr("Depth: ") + QString::number(depth);
 }
 
+
+const QPixmap& BackupModel::GetInclusionPixmap(bool include) const
+{
+	return include ? m_IncludePixmap : m_ExcludePixmap;
+}
 
 QModelIndex BackupModel::FindSrcDescByPath(const fs::path& fsPath) const
 {	
@@ -181,28 +186,35 @@ bool BackupModel::removeRows(int row, int count, const QModelIndex & parent /*= 
 		return ListModel::removeRows(row, count, parent);		
 	}	
 
+	auto srcDesc_it = GetIterator(parent);
 
+	for (int c_row = row, size_row = row + count; c_row < size_row; c_row++)
+	{
+		QModelIndex idx = index(c_row, 0, parent);
+
+		EItemType itemType = GetItemTypeByIndex(idx);
+
+		switch (itemType)
+		{
+		case BackupModel::EIT_Depth:
+		{
+			srcDesc_it->m_Depth = SrcPathDesc::Depthless;
+		}
+		break;
+		case BackupModel::EIT_Filter:
+		{
+			FilterIterator filter_it = GetFilterIteratorByIndex(idx);
+			srcDesc_it->m_Filters.erase(filter_it);
+		}
+		break;		
+		default:
+			assert(0);
+			break;
+		}	
+	}	
 	
 	if (!ListModel::removeRows(row, count, parent))
-		return false;
-
-	auto srcDesc_it = GetIterator(parent);
-	
-	if (row == 0)
-	{
-		srcDesc_it->m_Depth = SrcPathDesc::Depthless;		
-		row = 1;
-		--count;
-	}
-
-	if (count > 0)
-	{		
-		auto begin_it = srcDesc_it->m_Filters.begin();
-		advance(begin_it, row - 1);
-		auto end_it = begin_it;
-		advance(end_it, count);
-		srcDesc_it->m_Filters.erase(begin_it, end_it);
-	}
+		return false;	
 
 	Emit_ElementChanged(parent);
 	return true;
@@ -252,6 +264,7 @@ void BackupModel::AppendFilterItems(QStandardItem* itemPath, ContainerOfFilters&
 	{
 		auto& filter = *it;		
 		QStandardItem* itemFilter = new QStandardItem(GetFilterSpecificText(filter.get()));
+		//itemFilter->setData(GetInclusionPixmap(filter->IsInclusion()), Qt::DecorationRole);
 		itemFilter->setData(EItemType::EIT_Filter, EBackupItemRole::ItemTypeRole);
 		itemFilter->setData(QVariant::fromValue(it), EBackupItemRole::FilterIteratorRole);						
 		//itemFilter->setData(itemPath->data(ERoles::IteratorRole), ERoles::IteratorRole);

@@ -18,6 +18,7 @@ public:
 	virtual std::shared_ptr<Filters::FilterBase> GetFilter() const override;
 	virtual void SetFilter(const Filters::FilterBase* val) override;
 private:
+
     Ui::WildcardFilterEditor *ui;
 };
 

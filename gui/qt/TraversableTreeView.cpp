@@ -36,6 +36,8 @@ TraversableDelegate::TraversableDelegate(QObject *parent /*= Q_NULLPTR*/)
 	, m_Degree(0)
 	, m_DeltaDegPerFrame(qreal(360) / qreal(2000 / TraversableTreeView::msc_AnimationInterval))
 	, m_IndeterminatePixmap(":/Refresh-icon.png")
+	, m_InclusionPixmap(":/Button-Add-icon.png")	
+	, m_ExclusionPixmap(":/Button-Delete-icon.png")
 {
 }
 
@@ -49,11 +51,20 @@ void TraversableDelegate::SwitchToNextFrame()
 
 void TraversableDelegate::drawCheck(QPainter *painter, const QStyleOptionViewItem &option, const QRect &rect, Qt::CheckState state) const
 {
-	if (state != IndeterminateCheckState)
+	const QPixmap* pixmap;
+	switch (state)
 	{
-		QItemDelegate::drawCheck(painter, option, rect, state);		
+	case InclusionCheckState:
+	{
+		pixmap = &m_InclusionPixmap;
 	}
-	else
+	break;
+	case ExclusionCheckState:
+	{
+		pixmap = &m_ExclusionPixmap;
+	}
+	break;
+	case IndeterminateCheckState:
 	{
 		painter->save();
 		painter->translate(rect.center());
@@ -62,5 +73,18 @@ void TraversableDelegate::drawCheck(QPainter *painter, const QStyleOptionViewIte
 		int y = rect.height() / -2;
 		painter->drawPixmap(x, y, rect.width(), rect.height(), m_IndeterminatePixmap);
 		painter->restore();
+		return;
 	}
+	break;
+	default:
+		QItemDelegate::drawCheck(painter, option, rect, state);
+		return;
+	}	
+
+	painter->save();
+	painter->translate(rect.center());
+	int x = rect.width() / -2;
+	int y = rect.height() / -2;
+	painter->drawPixmap(x, y, rect.width(), rect.height(), *pixmap);
+	painter->restore();
 }

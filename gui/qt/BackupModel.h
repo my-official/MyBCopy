@@ -288,7 +288,9 @@ private:
 	void AppendDepthItem(QStandardItem* itemPath, iterator& srcPathIter);			
 
 	static QString DepthString(size_t depth);	
+	const QPixmap& GetInclusionPixmap(bool include) const;
 
 	QPixmap m_IncludePixmap;
 	QPixmap m_ExcludePixmap;	
+	
 };

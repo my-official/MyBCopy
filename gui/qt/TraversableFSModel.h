@@ -7,6 +7,8 @@ class BackupModel;
 
 
 const Qt::CheckState IndeterminateCheckState = static_cast<Qt::CheckState>(Qt::CheckState::Checked + 1);
+const Qt::CheckState InclusionCheckState = static_cast<Qt::CheckState>(Qt::CheckState::Checked + 2);
+const Qt::CheckState ExclusionCheckState = static_cast<Qt::CheckState>(Qt::CheckState::Checked + 3);
 
 class TraversableModelThread;
 
@@ -34,11 +36,18 @@ public:
 	
 	Qt::ItemFlags flags(const QModelIndex &index) const;
 	QVariant data(const QModelIndex &index, int role) const;
-	bool setData(const QModelIndex &index, const QVariant &value, int role);
-
-private slots:
+//	bool setData(const QModelIndex &index, const QVariant &value, int role);
+	
 	void InvokeTraverse();
+signals:
+	void TraverseCompleted();
+private slots:
+	
 	void on_TraverseCompleted(int requestId, const DirName2EntryCheckStateMap& checkedEntries);
+	void on_ContainerReset();
+	void on_ElementAdded(const QModelIndex& backupModelIdx);
+	void on_ElementChanged(const QModelIndex& backupModelIdx);
+	void on_ElementBeforeRemove(int row, int count);
 private:
 	BackupModel* m_BackupModel;
 	int m_CurrRequestId;

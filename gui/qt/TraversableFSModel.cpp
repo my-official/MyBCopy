@@ -73,6 +73,53 @@ void TraversableFSModel::on_TraverseCompleted(int requestId, const DirName2Entry
 	m_Cache.swap(const_cast<DirName2EntryCheckStateMap&>(checkedEntries));
 	m_CurrRequestId = 0;
 	emitCheckStateChanged_AllChildren(QModelIndex());
+	emit TraverseCompleted();
+}
+
+void TraversableFSModel::on_ContainerReset()
+{
+	m_Cache.clear();
+	emitCheckStateChanged_AllChildren(QModelIndex());
+	auto srcList = m_BackupModel->GetSourceList();
+	for (auto& srcDesc : *srcList)
+	{
+		QString qPath = QDir::fromNativeSeparators(QString::fromStdWString(srcDesc.m_Path));
+		m_Cache[qPath] = srcDesc.m_Include ? InclusionCheckState : ExclusionCheckState;
+
+		QModelIndex idx = index(qPath);
+		if (idx.isValid())
+			emit dataChanged(idx, idx, { Qt::CheckStateRole });
+	}
+}
+
+void TraversableFSModel::on_ElementAdded(const QModelIndex& backupModelIdx)
+{
+	SrcPathDesc& srcDesc = m_BackupModel->GetSrcDescByIndex(backupModelIdx);
+	QString qPath = QDir::fromNativeSeparators(QString::fromStdWString(srcDesc.m_Path));
+	m_Cache[qPath] = srcDesc.m_Include ? InclusionCheckState : ExclusionCheckState;
+
+	QModelIndex idx = index(qPath);
+	if (idx.isValid())
+		emit dataChanged(idx, idx, { Qt::CheckStateRole });
+}
+
+void TraversableFSModel::on_ElementChanged(const QModelIndex& backupModelIdx)
+{
+
+}
+
+void TraversableFSModel::on_ElementBeforeRemove(int row, int count)
+{
+	for (int c = 0; c < count; c++)
+	{
+		SrcPathDesc& srcDesc = m_BackupModel->GetSrcDescByIndex(m_BackupModel->index(row + c, 0));
+		QString qPath = QDir::fromNativeSeparators(QString::fromStdWString(srcDesc.m_Path));
+		m_Cache.erase(qPath);
+
+		QModelIndex idx = index(qPath);
+		if (idx.isValid())
+			emit dataChanged(idx, idx, { Qt::CheckStateRole });
+	}
 }
 
 TraversableFSModel::TraversableFSModel(BackupModel* backupModel, QObject* parent /*= Q_NULLPTR*/)
@@ -81,10 +128,10 @@ TraversableFSModel::TraversableFSModel(BackupModel* backupModel, QObject* parent
 	, m_CurrRequestId(0)
 	, m_NextRequestId(1)
 {
-	connect(m_BackupModel, SIGNAL(ContainerReset()), this, SLOT(InvokeTraverse()));
-	connect(m_BackupModel, SIGNAL(ElementChanged(const QModelIndex&)), this, SLOT(InvokeTraverse()));
-	connect(m_BackupModel, SIGNAL(ElementAdded(const QModelIndex&)), this, SLOT(InvokeTraverse()));
-	connect(m_BackupModel, SIGNAL(ElementAfterRemove(int, int)), this, SLOT(InvokeTraverse()));
+	connect(m_BackupModel, SIGNAL(ContainerReset()), this, SLOT(on_ContainerReset()));
+	connect(m_BackupModel, SIGNAL(ElementAdded(const QModelIndex&)), this, SLOT(on_ElementAdded(const QModelIndex&)));
+	//connect(m_BackupModel, SIGNAL(ElementChanged(const QModelIndex&)), this, SLOT(InvokeTraverse()));
+	connect(m_BackupModel, SIGNAL(ElementBeforeRemove(int, int)), this, SLOT(on_ElementBeforeRemove(int, int)));
 
 	
 	InitModule();
@@ -131,58 +178,78 @@ QVariant TraversableFSModel::data(const QModelIndex &index, int role) const
 		return IndeterminateCheckState;
 	
 	QString entryFullPath = QDir::cleanPath(QFileSystemModel::filePath(index));
-
+	
 	auto it = m_Cache.find(entryFullPath);
-	if (it == m_Cache.end())
-		return Qt::Unchecked;
-	else
-		return it->second;	
+
+	if (it != m_Cache.end())
+		return it->second;
+
+	return Qt::Unchecked;
+
+	//decltype(m_Cache.find(entryFullPath)) it;
+
+	//do
+	//{
+	//	it = m_Cache.find(entryFullPath);
+
+	//	if (it != m_Cache.end())
+	//		return it->second;
+
+	//	int pos = entryFullPath.lastIndexOf('\\');
+	//	if (pos == -1)
+	//		break;
+
+	//	entryFullPath = entryFullPath.left(pos + 1);
+	//	
+	//} while (true);
+	//
+	//return Qt::Unchecked;		
 }
 
 
-
-bool TraversableFSModel::setData(const QModelIndex &index, const QVariant& value, int role)
-{
-	if (role != Qt::CheckStateRole || index.column() != 0)
-		return QFileSystemModel::setData(index, value, role);
-			
-	Qt::CheckState prevCheckState = static_cast<Qt::CheckState>(data(index, Qt::CheckStateRole).toInt());
-
-	if (prevCheckState == IndeterminateCheckState)
-		return false;
-
-	QString qFilePath = QFileSystemModel::filePath(index);
-	fs::path fsPath = qFilePath.toStdWString();	
-
-	auto idxSrcDesc = m_BackupModel->FindSrcDescByPath(fsPath);
-
-	if (!idxSrcDesc.isValid())
-	{
-		///Add	
-
-		SrcPathDesc newSrcPath;
-		newSrcPath.m_Path = fsPath;
-
-		if (prevCheckState == Qt::Checked)
-			newSrcPath.m_Include = false;//Exclusion
-
-		m_BackupModel->Add(newSrcPath);
-	}
-	else
-	{
-		
-		///Remove
-		auto result = QMessageBox::question(QApplication::activeWindow(), tr("Are you sure?"), tr("Source path description will be remove"), QMessageBox::Yes, QMessageBox::No);
-		if (result != QMessageBox::Yes)
-		{
-			return false;
-		}
-
-		m_BackupModel->removeRow(idxSrcDesc.row(), idxSrcDesc.parent());
-	}
-
-	//emit dataChanged(index, index, { Qt::CheckStateRole });
-
-	return true;
-}
-
+//
+//bool TraversableFSModel::setData(const QModelIndex &index, const QVariant& value, int role)
+//{
+//	if (role != Qt::CheckStateRole || index.column() != 0)
+//		return QFileSystemModel::setData(index, value, role);
+//			
+//	Qt::CheckState prevCheckState = static_cast<Qt::CheckState>(data(index, Qt::CheckStateRole).toInt());
+//
+//	if (prevCheckState == IndeterminateCheckState)
+//		return false;
+//
+//	QString qFilePath = QFileSystemModel::filePath(index);
+//	fs::path fsPath = qFilePath.toStdWString();	
+//
+//	auto idxSrcDesc = m_BackupModel->FindSrcDescByPath(fsPath);
+//
+//	if (!idxSrcDesc.isValid())
+//	{
+//		///Add	
+//
+//		SrcPathDesc newSrcPath;
+//		newSrcPath.m_Path = fsPath;
+//
+//		if (prevCheckState == Qt::Checked)
+//			newSrcPath.m_Include = false;//Exclusion
+//
+//		m_BackupModel->Add(newSrcPath);
+//	}
+//	else
+//	{
+//		
+//		///Remove
+//		auto result = QMessageBox::question(QApplication::activeWindow(), tr("Are you sure?"), tr("Source path rule will be remove"), QMessageBox::Yes, QMessageBox::No);
+//		if (result != QMessageBox::Yes)
+//		{
+//			return false;
+//		}
+//
+//		m_BackupModel->removeRow(idxSrcDesc.row(), idxSrcDesc.parent());
+//	}
+//
+//	//emit dataChanged(index, index, { Qt::CheckStateRole });
+//
+//	return true;
+//}
+//
